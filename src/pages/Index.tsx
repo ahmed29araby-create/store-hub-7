@@ -135,6 +135,9 @@ const Index = () => {
             <Store className="w-4 h-4 ml-2" />
             إنشاء موقع
           </Button>
+          <Button variant="secondary" onClick={() => navigate("/customer-register")}>
+            إنشاء حساب
+          </Button>
         </div>
       </motion.header>
 

@@ -105,16 +105,16 @@ const ElectronicsStore = () => {
         {products.length === 0 ? (
           <p className="text-center text-muted-foreground py-20">لا توجد منتجات حالياً</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {products.map((product, i) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
+                transition={{ delay: i * 0.08 }}
                 className="group cursor-pointer bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <div className="aspect-square overflow-hidden bg-secondary relative">
+                <div className="aspect-[4/5] overflow-hidden bg-secondary relative">
                   {product.image_url && (
                     <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   )}

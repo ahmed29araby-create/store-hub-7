@@ -9,6 +9,8 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import SetupPage from "./pages/Setup";
+import CustomerRegister from "./pages/CustomerRegister";
 import ClothingStore from "./pages/store/ClothingStore";
 import AccessoriesStore from "./pages/store/AccessoriesStore";
 import RestaurantStore from "./pages/store/RestaurantStore";
