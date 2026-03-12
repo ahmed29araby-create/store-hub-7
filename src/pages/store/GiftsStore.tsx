@@ -3,14 +3,14 @@ import { ShoppingBag, ArrowLeft, Heart, Gift, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStoreProducts } from "@/hooks/useStoreProducts";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const GiftsStore = () => {
   const { organization, products, isLoading: productsLoading, orgId } = useStoreProducts();
   const { settings } = useStoreSettings(orgId);
+  const { toggleFavorite, isFavorite } = useFavorites(orgId);
 
-  const categories = settings?.categories
-    ? settings.categories
-    : ["الكل", "هدايا", "ورد", "شوكولاتة", "تغليف هدايا"];
+  const categories = settings?.categories ? settings.categories : ["الكل", "هدايا", "ورد", "شوكولاتة", "تغليف هدايا"];
 
   return (
     <div className="min-h-screen bg-background" dir="rtl" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -32,17 +32,10 @@ const GiftsStore = () => {
         <div className="absolute inset-0 bg-gradient-to-l from-rose-900/80 to-pink-800/40" />
         <div className="relative z-10 h-full flex items-center max-w-7xl mx-auto px-6">
           <div className="text-white max-w-lg">
-            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="text-5xl md:text-6xl font-bold mb-6">
-              {settings?.hero_title || "اصنع لحظة سعادة"}
-            </motion.h2>
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="text-white/70 mb-8 text-lg">
-              {settings?.hero_subtitle || "هدايا، ورد، شوكولاتة وتغليف فاخر لكل المناسبات"}
-            </motion.p>
+            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="text-5xl md:text-6xl font-bold mb-6">{settings?.hero_title || "اصنع لحظة سعادة"}</motion.h2>
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="text-white/70 mb-8 text-lg">{settings?.hero_subtitle || "هدايا، ورد، شوكولاتة وتغليف فاخر لكل المناسبات"}</motion.p>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
-              <Button className="bg-white text-rose-900 hover:bg-white/90 rounded-full px-8 py-6 text-sm tracking-wider font-semibold">
-                {settings?.hero_button_text || "تسوق الآن"}
-                <ArrowLeft className="w-4 h-4 mr-2" />
-              </Button>
+              <Button className="bg-white text-rose-900 hover:bg-white/90 rounded-full px-8 py-6 text-sm tracking-wider font-semibold">{settings?.hero_button_text || "تسوق الآن"}<ArrowLeft className="w-4 h-4 mr-2" /></Button>
             </motion.div>
           </div>
         </div>
@@ -50,9 +43,7 @@ const GiftsStore = () => {
 
       <section className="max-w-7xl mx-auto px-6 pt-12">
         <div className="flex gap-3 overflow-x-auto pb-4">
-          {categories.map((cat, i) => (
-            <Button key={String(cat)} variant={i === 0 ? "default" : "outline"} className="rounded-full whitespace-nowrap">{String(cat)}</Button>
-          ))}
+          {categories.map((cat, i) => (<Button key={String(cat)} variant={i === 0 ? "default" : "outline"} className="rounded-full whitespace-nowrap">{String(cat)}</Button>))}
         </div>
       </section>
 
@@ -66,17 +57,14 @@ const GiftsStore = () => {
               <motion.div key={product.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="group cursor-pointer bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="aspect-[4/5] overflow-hidden bg-secondary relative">
                   {product.image_url && <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />}
-                  <button className="absolute top-3 left-3 w-8 h-8 bg-background/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Heart className="w-4 h-4" />
+                  <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
+                    <Heart className={`w-4 h-4 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
                   </button>
-                  {product.category && <span className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">{product.category}</span>}
+                  {product.category && <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">{product.category}</span>}
                 </div>
-                <div className="p-4">
-                  <h4 className="font-medium text-foreground mb-2">{product.name}</h4>
-                  <div className="flex items-center justify-between">
-                    <p className="text-primary font-bold">{product.price.toLocaleString()} ج.م</p>
-                    <Button size="sm" variant="outline" className="rounded-full text-xs">أضف للسلة</Button>
-                  </div>
+                <div className="p-3">
+                  <h4 className="font-medium text-foreground mb-1 text-sm">{product.name}</h4>
+                  <p className="text-primary font-bold text-sm">{product.price.toLocaleString()} ج.م</p>
                 </div>
               </motion.div>
             ))}
@@ -86,9 +74,7 @@ const GiftsStore = () => {
         )}
       </section>
 
-      <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-        <p>© 2026 StoreHub - جميع الحقوق محفوظة</p>
-      </footer>
+      <footer className="border-t py-8 text-center text-sm text-muted-foreground"><p>© 2026 StoreHub - جميع الحقوق محفوظة</p></footer>
     </div>
   );
 };
