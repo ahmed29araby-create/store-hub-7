@@ -1,15 +1,19 @@
 import { motion } from "framer-motion";
-import { ShoppingBag, ArrowRight } from "lucide-react";
+import { ShoppingBag, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStoreProducts } from "@/hooks/useStoreProducts";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { useFavorites } from "@/hooks/useFavorites";
 import { useParams } from "react-router-dom";
 
 const HomeDecorStore = () => {
   const { orgId } = useParams();
   const { organization, products, isLoading } = useStoreProducts();
   const { settings } = useStoreSettings(orgId);
+  const { toggleFavorite, isFavorite } = useFavorites(orgId);
+
   if (isLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">جاري التحميل...</div>;
+
   const heroTitle = settings?.hero_title || "صمّم بيتك بذوقك";
   const heroSubtitle = settings?.hero_subtitle || "أثاث، ديكور، إضاءة ومفروشات بأعلى جودة";
   const heroButton = settings?.hero_button_text || "تسوق الآن";
@@ -24,6 +28,7 @@ const HomeDecorStore = () => {
           <Button variant="ghost" size="icon"><ShoppingBag className="w-5 h-5" /></Button>
         </div>
       </nav>
+
       <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative h-[70vh] overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
         <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, hsla(30,30%,15%,0.7), hsla(30,20%,20%,0.3))" }} />
@@ -35,13 +40,19 @@ const HomeDecorStore = () => {
           </div>
         </div>
       </motion.section>
+
       {cats.length > 0 && <section className="max-w-7xl mx-auto px-6 py-10"><div className="flex flex-wrap gap-3 justify-center">{cats.map((c,i) => <motion.button key={c} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.05 }} className="px-6 py-3 rounded-full border bg-white text-sm font-medium" style={{ borderColor:"hsl(30,20%,85%)", color:"hsl(30,30%,30%)" }}>{c}</motion.button>)}</div></section>}
+
       <section className="max-w-7xl mx-auto px-6 py-16">
         <h3 className="text-3xl font-bold mb-10" style={{ fontFamily: "'Playfair Display', serif", color: "hsl(30,30%,25%)" }}>منتجاتنا</h3>
         {products.length === 0 ? <div className="text-center py-12 text-muted-foreground">لا توجد منتجات حالياً</div> :
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">{products.map((p,i) => <motion.div key={p.id} initial={{ opacity:0,y:30 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.08 }} className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm" style={{ border:"1px solid hsl(30,20%,90%)" }}>
-          <div className="aspect-[4/5] overflow-hidden">{p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ShoppingBag className="w-12 h-12 opacity-30" /></div>}</div>
-          <div className="p-4"><h4 className="font-medium mb-1" style={{ color:"hsl(30,30%,20%)" }}>{p.name}</h4><p className="font-bold" style={{ color:"hsl(30,50%,40%)" }}>{p.price} ج.م</p></div>
+          <div className="aspect-[4/5] overflow-hidden relative">{p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ShoppingBag className="w-12 h-12 opacity-30" /></div>}
+            <button onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id, p.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
+              <Heart className={`w-4 h-4 ${isFavorite(p.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+            </button>
+          </div>
+          <div className="p-3"><h4 className="font-medium mb-1 text-sm" style={{ color:"hsl(30,30%,20%)" }}>{p.name}</h4><p className="font-bold text-sm" style={{ color:"hsl(30,50%,40%)" }}>{p.price} ج.م</p></div>
         </motion.div>)}</div>}
       </section>
     </div>

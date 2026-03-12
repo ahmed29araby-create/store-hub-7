@@ -10,6 +10,7 @@ export interface StoreProduct {
   image_url: string | null;
   category: string | null;
   is_available: boolean;
+  organization_id: string;
 }
 
 export const useStoreProducts = () => {

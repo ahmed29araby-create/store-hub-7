@@ -3,14 +3,14 @@ import { ShoppingBag, ArrowLeft, Heart, Dumbbell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStoreProducts } from "@/hooks/useStoreProducts";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const SportsStore = () => {
   const { organization, products, isLoading: productsLoading, orgId } = useStoreProducts();
-  const { settings, isLoading: settingsLoading } = useStoreSettings(orgId);
+  const { settings } = useStoreSettings(orgId);
+  const { toggleFavorite, isFavorite } = useFavorites(orgId);
 
-  const categories = settings?.categories
-    ? settings.categories
-    : ["الكل", "ملابس رياضية", "أدوات رياضية", "مكملات غذائية", "أجهزة رياضية"];
+  const categories = settings?.categories ? settings.categories : ["الكل", "ملابس رياضية", "أدوات رياضية", "مكملات غذائية", "أجهزة رياضية"];
 
   return (
     <div className="min-h-screen bg-background" dir="rtl" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -18,9 +18,7 @@ const SportsStore = () => {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Dumbbell className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">
-              {settings?.hero_title || "فِت ستور"}
-            </h1>
+            <h1 className="text-2xl font-bold text-foreground">{settings?.hero_title || "فِت ستور"}</h1>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon"><Search className="w-5 h-5" /></Button>
@@ -34,17 +32,10 @@ const SportsStore = () => {
         <div className="absolute inset-0 bg-gradient-to-l from-emerald-900/80 to-emerald-800/40" />
         <div className="relative z-10 h-full flex items-center max-w-7xl mx-auto px-6">
           <div className="text-white max-w-lg">
-            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="text-5xl md:text-6xl font-bold mb-6">
-              {settings?.hero_title || "ابدأ رحلتك الرياضية"}
-            </motion.h2>
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="text-white/70 mb-8 text-lg">
-              {settings?.hero_subtitle || "ملابس رياضية، أجهزة، مكملات غذائية وأدوات تدريب"}
-            </motion.p>
+            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="text-5xl md:text-6xl font-bold mb-6">{settings?.hero_title || "ابدأ رحلتك الرياضية"}</motion.h2>
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="text-white/70 mb-8 text-lg">{settings?.hero_subtitle || "ملابس رياضية، أجهزة، مكملات غذائية وأدوات تدريب"}</motion.p>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
-              <Button className="bg-white text-emerald-900 hover:bg-white/90 rounded-full px-8 py-6 text-sm tracking-wider font-semibold">
-                {settings?.hero_button_text || "تسوق الآن"}
-                <ArrowLeft className="w-4 h-4 mr-2" />
-              </Button>
+              <Button className="bg-white text-emerald-900 hover:bg-white/90 rounded-full px-8 py-6 text-sm tracking-wider font-semibold">{settings?.hero_button_text || "تسوق الآن"}<ArrowLeft className="w-4 h-4 mr-2" /></Button>
             </motion.div>
           </div>
         </div>
@@ -52,9 +43,7 @@ const SportsStore = () => {
 
       <section className="max-w-7xl mx-auto px-6 pt-12">
         <div className="flex gap-3 overflow-x-auto pb-4">
-          {categories.map((cat, i) => (
-            <Button key={String(cat)} variant={i === 0 ? "default" : "outline"} className="rounded-full whitespace-nowrap">{String(cat)}</Button>
-          ))}
+          {categories.map((cat, i) => (<Button key={String(cat)} variant={i === 0 ? "default" : "outline"} className="rounded-full whitespace-nowrap">{String(cat)}</Button>))}
         </div>
       </section>
 
@@ -68,16 +57,15 @@ const SportsStore = () => {
               <motion.div key={product.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="group cursor-pointer bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="aspect-[4/5] overflow-hidden bg-secondary relative">
                   {product.image_url && <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />}
-                  <button className="absolute top-3 left-3 w-8 h-8 bg-background/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Heart className="w-4 h-4" />
+                  <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
+                    <Heart className={`w-4 h-4 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
                   </button>
-                  {product.category && <span className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">{product.category}</span>}
+                  {product.category && <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">{product.category}</span>}
                 </div>
-                <div className="p-4">
-                  <h4 className="font-medium text-foreground mb-2">{product.name}</h4>
+                <div className="p-3">
+                  <h4 className="font-medium text-foreground mb-1 text-sm">{product.name}</h4>
                   <div className="flex items-center justify-between">
-                    <p className="text-primary font-bold">{product.price.toLocaleString()} ج.م</p>
-                    <Button size="sm" variant="outline" className="rounded-full text-xs">أضف للسلة</Button>
+                    <p className="text-primary font-bold text-sm">{product.price.toLocaleString()} ج.م</p>
                   </div>
                 </div>
               </motion.div>
@@ -88,9 +76,7 @@ const SportsStore = () => {
         )}
       </section>
 
-      <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-        <p>© 2026 StoreHub - جميع الحقوق محفوظة</p>
-      </footer>
+      <footer className="border-t py-8 text-center text-sm text-muted-foreground"><p>© 2026 StoreHub - جميع الحقوق محفوظة</p></footer>
     </div>
   );
 };

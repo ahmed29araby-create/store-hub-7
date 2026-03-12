@@ -1,14 +1,16 @@
 import { motion } from "framer-motion";
-import { ShoppingBag, Pill, Search } from "lucide-react";
+import { ShoppingBag, Pill, Search, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStoreProducts } from "@/hooks/useStoreProducts";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { useFavorites } from "@/hooks/useFavorites";
 import { useParams } from "react-router-dom";
 
 const PharmacyStore = () => {
   const { orgId } = useParams();
   const { organization, products, isLoading } = useStoreProducts();
   const { settings } = useStoreSettings(orgId);
+  const { toggleFavorite, isFavorite } = useFavorites(orgId);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">جاري التحميل...</div>;
@@ -107,7 +109,7 @@ const PharmacyStore = () => {
                 transition={{ delay: i * 0.08 }}
                 className="group cursor-pointer bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <div className="aspect-[4/5] overflow-hidden bg-secondary">
+                <div className="aspect-[4/5] overflow-hidden bg-secondary relative">
                   {product.image_url ? (
                     <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   ) : (
@@ -115,10 +117,13 @@ const PharmacyStore = () => {
                       <Pill className="w-12 h-12 opacity-30" />
                     </div>
                   )}
+                  <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
+                    <Heart className={`w-4 h-4 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+                  </button>
                 </div>
-                <div className="p-4">
-                  <h4 className="font-medium text-foreground mb-2">{product.name}</h4>
-                  <p className="text-primary font-bold">{product.price} ج.م</p>
+                <div className="p-3">
+                  <h4 className="font-medium text-foreground mb-1 text-sm">{product.name}</h4>
+                  <p className="text-primary font-bold text-sm">{product.price} ج.م</p>
                 </div>
               </motion.div>
             ))}
