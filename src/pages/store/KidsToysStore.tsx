@@ -39,8 +39,8 @@ const KidsToysStore = () => {
       <section className="max-w-7xl mx-auto px-6 py-16">
         <h3 className="text-3xl font-black mb-10" style={{ color:"hsl(280,60%,40%)" }}>منتجاتنا</h3>
         {products.length === 0 ? <div className="text-center py-12 text-muted-foreground">لا توجد منتجات حالياً</div> :
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">{products.map((p,i) => <motion.div key={p.id} initial={{ opacity:0,y:25 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.1 }} className="group bg-white rounded-[1.5rem] overflow-hidden shadow-sm cursor-pointer" style={{ border:"2px solid hsl(45,40%,90%)" }}>
-          <div className="aspect-square overflow-hidden" style={{ backgroundColor:"hsl(45,50%,95%)" }}>{p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center"><ShoppingBag className="w-10 h-10 opacity-20" /></div>}</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">{products.map((p,i) => <motion.div key={p.id} initial={{ opacity:0,y:25 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.08 }} className="group bg-white rounded-[1.5rem] overflow-hidden shadow-sm cursor-pointer" style={{ border:"2px solid hsl(45,40%,90%)" }}>
+          <div className="aspect-[4/5] overflow-hidden" style={{ backgroundColor:"hsl(45,50%,95%)" }}>{p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center"><ShoppingBag className="w-10 h-10 opacity-20" /></div>}</div>
           <div className="p-4"><h4 className="font-bold text-sm mb-2" style={{ color:"hsl(280,40%,25%)" }}>{p.name}</h4><p className="font-black" style={{ color:"hsl(280,60%,55%)" }}>{p.price} ج.م</p></div>
         </motion.div>)}</div>}
       </section>

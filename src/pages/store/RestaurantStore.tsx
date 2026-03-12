@@ -107,16 +107,16 @@ const RestaurantStore = () => {
         {products.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">لا توجد أطباق حالياً</div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {products.map((product, i) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
+                transition={{ delay: i * 0.08 }}
                 className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300"
               >
-                <div className="aspect-[4/3] overflow-hidden">
+                <div className="aspect-[4/5] overflow-hidden">
                   {product.image_url ? (
                     <img
                       src={product.image_url}
