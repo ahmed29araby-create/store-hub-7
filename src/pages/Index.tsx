@@ -116,27 +116,26 @@ const Index = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="flex items-center justify-between pt-8 pb-4 px-6 md:px-12"
+        className="pt-10 pb-6 px-6 md:px-12 text-center"
       >
-        <div className="text-center flex-1">
-          <h1 className="text-5xl md:text-7xl font-bold text-foreground tracking-tight mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-            StoreHub
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto">
-            اختر نوع متجرك وابدأ رحلتك التجارية
-          </p>
-        </div>
-        <div className="absolute top-6 left-6 flex flex-col gap-2">
-          <Button variant="outline" onClick={() => navigate("/login")}>
+        <h1 className="text-5xl md:text-7xl font-bold text-foreground tracking-tight mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+          StoreHub
+        </h1>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-6">
+          اختر نوع متجرك وابدأ رحلتك التجارية
+        </p>
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <Button variant="outline" onClick={() => navigate("/login")} className="min-w-[140px]">
             <LogIn className="w-4 h-4 ml-2" />
             تسجيل الدخول
           </Button>
-          <Button onClick={() => navigate("/register")} className="bg-primary text-primary-foreground">
+          <Button variant="secondary" onClick={() => navigate("/customer-register")} className="min-w-[140px]">
+            <UserPlus className="w-4 h-4 ml-2" />
+            إنشاء حساب
+          </Button>
+          <Button onClick={() => navigate("/register")} className="bg-primary text-primary-foreground min-w-[140px]">
             <Store className="w-4 h-4 ml-2" />
             إنشاء موقع
-          </Button>
-          <Button variant="secondary" onClick={() => navigate("/customer-register")}>
-            إنشاء حساب
           </Button>
         </div>
       </motion.header>
