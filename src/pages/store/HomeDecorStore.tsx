@@ -39,8 +39,8 @@ const HomeDecorStore = () => {
       <section className="max-w-7xl mx-auto px-6 py-16">
         <h3 className="text-3xl font-bold mb-10" style={{ fontFamily: "'Playfair Display', serif", color: "hsl(30,30%,25%)" }}>منتجاتنا</h3>
         {products.length === 0 ? <div className="text-center py-12 text-muted-foreground">لا توجد منتجات حالياً</div> :
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">{products.map((p,i) => <motion.div key={p.id} initial={{ opacity:0,y:30 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.1 }} className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm" style={{ border:"1px solid hsl(30,20%,90%)" }}>
-          <div className="aspect-square overflow-hidden">{p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ShoppingBag className="w-12 h-12 opacity-30" /></div>}</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">{products.map((p,i) => <motion.div key={p.id} initial={{ opacity:0,y:30 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.08 }} className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm" style={{ border:"1px solid hsl(30,20%,90%)" }}>
+          <div className="aspect-[4/5] overflow-hidden">{p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ShoppingBag className="w-12 h-12 opacity-30" /></div>}</div>
           <div className="p-4"><h4 className="font-medium mb-1" style={{ color:"hsl(30,30%,20%)" }}>{p.name}</h4><p className="font-bold" style={{ color:"hsl(30,50%,40%)" }}>{p.price} ج.م</p></div>
         </motion.div>)}</div>}
       </section>
