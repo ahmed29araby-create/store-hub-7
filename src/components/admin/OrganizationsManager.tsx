@@ -15,6 +15,13 @@ const storeTypeLabels: Record<string, string> = {
   clothing: "ملابس",
   accessories: "إكسسوارات",
   restaurant: "مطاعم",
+  pharmacy: "صيدلية",
+  electronics: "إلكترونيات وتقنية",
+  sports: "رياضة ولياقة",
+  gifts: "هدايا ومناسبات",
+  home_decor: "المنزل والديكور",
+  supermarket: "سوبرماركت",
+  kids_toys: "أطفال وألعاب",
 };
 
 const OrganizationsManager = () => {
