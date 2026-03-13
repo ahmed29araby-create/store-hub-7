@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Eye, EyeOff, User, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, User, CheckCircle, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -17,6 +17,7 @@ const CustomerRegister = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleRegister = async () => {
     if (!name || !email || !password) {
@@ -30,7 +31,7 @@ const CustomerRegister = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -39,31 +40,33 @@ const CustomerRegister = () => {
             phone: phone,
             is_customer: true,
           },
+          emailRedirectTo: window.location.origin,
         },
       });
       if (error) throw error;
-
-      // Auto-login after signup (since auto-confirm is enabled)
-      if (data.session) {
-        toast.success("تم إنشاء حسابك بنجاح! مرحباً بك 🎉");
-        navigate("/dashboard");
-      } else {
-        // Fallback: try to sign in
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (!signInError) {
-          toast.success("تم إنشاء حسابك بنجاح! مرحباً بك 🎉");
-          navigate("/dashboard");
-        } else {
-          toast.success("تم إنشاء حسابك بنجاح!");
-          navigate("/login");
-        }
-      }
+      setSuccess(true);
     } catch (err: any) {
       toast.error(err.message || "حدث خطأ أثناء التسجيل");
     } finally {
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4" dir="rtl">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-md">
+          <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold text-foreground mb-3">تم إنشاء حسابك بنجاح!</h2>
+          <p className="text-muted-foreground mb-8">تم إرسال رابط التأكيد إلى بريدك الإلكتروني. يرجى تأكيد حسابك قبل تسجيل الدخول.</p>
+          <Button onClick={() => navigate("/login")} variant="outline">
+            <ArrowRight className="w-4 h-4 ml-2" />
+            تسجيل الدخول
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12" dir="rtl">

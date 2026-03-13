@@ -4,7 +4,7 @@ import type { User } from "@supabase/supabase-js";
 
 interface AuthContextType {
   user: User | null;
-  role: "super_admin" | "admin" | "moderator" | "customer" | null;
+  role: "super_admin" | "admin" | null;
   profile: { display_name: string; email: string; organization_id: string | null } | null;
   organization: { id: string; name: string; store_type: string; is_active: boolean; approval_status?: string; trial_end_date?: string | null } | null;
   loading: boolean;
@@ -23,7 +23,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<AuthContextType["role"]>(null);
+  const [role, setRole] = useState<"super_admin" | "admin" | null>(null);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [organization, setOrganization] = useState<AuthContextType["organization"]>(null);
   const [loading, setLoading] = useState(true);
@@ -31,27 +31,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [lockUntil, setLockUntil] = useState<number | null>(null);
 
   const fetchUserData = async (userId: string) => {
-    // Fetch role - use maybeSingle to avoid 406 error
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
+    const [{ data: roleData }, { data: profileData }] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", userId).single(),
+      supabase.from("profiles").select("display_name, email, organization_id").eq("user_id", userId).single(),
+    ]);
 
-    // Fetch profile - use maybeSingle to avoid 406 error
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("display_name, email, organization_id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (roleData) {
-      setRole(roleData.role as AuthContextType["role"]);
-    } else {
-      // No role means customer
-      setRole("customer");
-    }
-
+    if (roleData) setRole(roleData.role as "super_admin" | "admin");
     if (profileData) {
       setProfile(profileData);
       if (profileData.organization_id) {
@@ -59,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .from("organizations")
           .select("id, name, store_type, is_active, approval_status, trial_end_date")
           .eq("id", profileData.organization_id)
-          .maybeSingle();
+          .single();
         if (orgData) setOrganization(orgData as any);
       }
     }
@@ -72,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!mounted) return;
       if (session?.user) {
         setUser(session.user);
+        // Don't await inside onAuthStateChange to avoid deadlocks
         fetchUserData(session.user.id).finally(() => {
           if (mounted) setLoading(false);
         });
@@ -131,6 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshUserData = async () => {
     if (user) {
       await fetchUserData(user.id);
+      // Also refresh the session to get updated email
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) setUser(session.user);
     }
