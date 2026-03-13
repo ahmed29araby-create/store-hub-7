@@ -14,48 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      cart_items: {
-        Row: {
-          created_at: string
-          id: string
-          organization_id: string
-          product_id: string
-          quantity: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          organization_id: string
-          product_id: string
-          quantity?: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          organization_id?: string
-          product_id?: string
-          quantity?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cart_items_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cart_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       favorites: {
         Row: {
           created_at: string
@@ -91,47 +49,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      moderator_permissions: {
-        Row: {
-          can_edit_prices: boolean
-          can_manage_orders: boolean
-          can_manage_products: boolean
-          created_at: string
-          full_control: boolean
-          id: string
-          organization_id: string
-          user_id: string
-        }
-        Insert: {
-          can_edit_prices?: boolean
-          can_manage_orders?: boolean
-          can_manage_products?: boolean
-          created_at?: string
-          full_control?: boolean
-          id?: string
-          organization_id: string
-          user_id: string
-        }
-        Update: {
-          can_edit_prices?: boolean
-          can_manage_orders?: boolean
-          can_manage_products?: boolean
-          created_at?: string
-          full_control?: boolean
-          id?: string
-          organization_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "moderator_permissions_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -384,7 +301,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "super_admin" | "admin" | "moderator"
+      app_role: "super_admin" | "admin"
       store_type:
         | "clothing"
         | "accessories"
@@ -523,7 +440,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "admin", "moderator"],
+      app_role: ["super_admin", "admin"],
       store_type: [
         "clothing",
         "accessories",
