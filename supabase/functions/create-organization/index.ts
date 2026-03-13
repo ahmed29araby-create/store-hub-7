@@ -20,14 +20,11 @@ Deno.serve(async (req) => {
     if (!authHeader?.startsWith("Bearer ")) throw new Error("Unauthorized");
     const token = authHeader.replace("Bearer ", "");
 
-    const anonClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims?.sub) throw new Error("Unauthorized");
-    const userId = claimsData.claims.sub as string;
+    // Verify user via getUser
+    const { data: { user: caller }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !caller) throw new Error("Unauthorized");
+
+    const userId = caller.id;
 
     const { data: roleCheck } = await supabaseAdmin
       .from("user_roles")
@@ -76,6 +73,11 @@ Deno.serve(async (req) => {
     await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: newUser.user.id, role: "admin" });
+
+    // Create default store settings
+    await supabaseAdmin
+      .from("store_settings")
+      .insert({ organization_id: org.id });
 
     return new Response(JSON.stringify({ success: true, organization: org }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

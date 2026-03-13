@@ -16,28 +16,21 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify caller using getClaims
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) throw new Error("No authorization header");
-
     const token = authHeader.replace("Bearer ", "");
-    
-    const anonClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-    
-    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims?.sub) throw new Error("Unauthorized");
-    
-    const userId = claimsData.claims.sub as string;
-    const userEmail = claimsData.claims.email as string;
+
+    // Verify user via getUser
+    const { data: { user: caller }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !caller) throw new Error("Unauthorized");
+
+    const userId = caller.id;
+    const userEmail = caller.email;
 
     const { new_email, current_password, new_password } = await req.json();
 
-    // Verify current password using a fresh client
-    if (current_password) {
+    // Verify current password if provided
+    if (current_password && userEmail) {
       const verifyClient = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_ANON_KEY")!
