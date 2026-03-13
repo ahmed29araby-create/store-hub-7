@@ -5,21 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Lock, User, Mail, Link2, Copy } from "lucide-react";
+import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { toast } from "sonner";
 
 const CompanySettings = () => {
-  const { user, profile, organization, refreshUserData } = useAuth();
-
-  // Name editing
-  const [editName, setEditName] = useState(profile?.display_name || "");
-  const [nameLoading, setNameLoading] = useState(false);
-
-  // Email editing
-  const [newEmail, setNewEmail] = useState("");
-  const [emailLoading, setEmailLoading] = useState(false);
-
-  // Password
+  const { profile, organization } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,51 +17,6 @@ const CompanySettings = () => {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const storeUrl = organization?.store_type && organization?.id
-    ? `${window.location.origin}/store/${organization.store_type}/${organization.id}`
-    : "";
-
-  const copyStoreLink = () => {
-    if (storeUrl) {
-      navigator.clipboard.writeText(storeUrl);
-      toast.success("تم نسخ رابط المتجر!");
-    }
-  };
-
-  const handleUpdateName = async () => {
-    if (!editName.trim()) return;
-    setNameLoading(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ display_name: editName.trim() })
-      .eq("user_id", user!.id);
-    if (error) {
-      toast.error("حدث خطأ أثناء تحديث الاسم");
-    } else {
-      toast.success("تم تحديث الاسم بنجاح");
-      await refreshUserData();
-    }
-    setNameLoading(false);
-  };
-
-  const handleUpdateEmail = async () => {
-    if (!newEmail.trim()) return;
-    setEmailLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("update-admin-credentials", {
-        body: { new_email: newEmail },
-      });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      toast.success("تم تحديث البريد الإلكتروني بنجاح");
-      setNewEmail("");
-      await refreshUserData();
-    } catch (err: any) {
-      toast.error(err.message || "حدث خطأ");
-    }
-    setEmailLoading(false);
-  };
 
   const handleChangePassword = async () => {
     if (newPassword.length < 12) {
@@ -89,17 +34,29 @@ const CompanySettings = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("update-admin-credentials", {
-        body: { current_password: currentPassword, new_password: newPassword },
+      // Verify current password
+      const email = profile?.email;
+      if (!email) throw new Error("لم يتم العثور على البريد الإلكتروني");
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: currentPassword,
       });
+      if (signInError) {
+        toast.error("كلمة المرور الحالية غير صحيحة");
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+
       toast.success("تم تغيير كلمة المرور بنجاح");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      toast.error(err.message || "حدث خطأ");
+      toast.error(err.message || "حدث خطأ أثناء تغيير كلمة المرور");
     }
     setLoading(false);
   };
@@ -118,27 +75,6 @@ const CompanySettings = () => {
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      {/* Share Store Link */}
-      {storeUrl && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Link2 className="w-4 h-4" />
-              مشاركة رابط المتجر
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <Input value={storeUrl} readOnly dir="ltr" className="text-xs" />
-              <Button variant="outline" size="icon" onClick={copyStoreLink}>
-                <Copy className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Account Info - Editable */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -146,46 +82,33 @@ const CompanySettings = () => {
             معلومات الحساب
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>الاسم</Label>
-            <div className="flex gap-2">
-              <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
-              <Button size="sm" onClick={handleUpdateName} disabled={nameLoading}>
-                {nameLoading ? "..." : "حفظ"}
-              </Button>
-            </div>
+        <CardContent className="space-y-3">
+          <div>
+            <Label className="text-muted-foreground text-xs">الاسم</Label>
+            <p className="font-medium">{profile?.display_name}</p>
           </div>
-          <div className="space-y-2">
-            <Label>البريد الإلكتروني الحالي</Label>
-            <p className="font-medium text-sm text-muted-foreground">{profile?.email}</p>
+          <div>
+            <Label className="text-muted-foreground text-xs">البريد الإلكتروني</Label>
+            <p className="font-medium">{profile?.email}</p>
+          </div>
+          <div>
+            <Label className="text-muted-foreground text-xs">نوع المتجر</Label>
+            <p className="font-medium">
+              {organization?.store_type === "clothing" && "ملابس"}
+              {organization?.store_type === "accessories" && "إكسسوارات"}
+              {organization?.store_type === "restaurant" && "مطاعم"}
+              {organization?.store_type === "pharmacy" && "صيدلية"}
+              {organization?.store_type === "electronics" && "إلكترونيات وتقنية"}
+              {organization?.store_type === "sports" && "رياضة ولياقة"}
+              {organization?.store_type === "gifts" && "هدايا ومناسبات"}
+              {organization?.store_type === "home_decor" && "المنزل والديكور"}
+              {organization?.store_type === "supermarket" && "سوبرماركت"}
+              {organization?.store_type === "kids_toys" && "أطفال وألعاب"}
+            </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Email Change */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Mail className="w-4 h-4" />
-            تعديل البريد الإلكتروني
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Input
-            type="email"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            placeholder="البريد الإلكتروني الجديد"
-            dir="ltr"
-          />
-          <Button onClick={handleUpdateEmail} disabled={!newEmail.trim() || emailLoading} className="w-full">
-            {emailLoading ? "جاري التحديث..." : "تحديث البريد الإلكتروني"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Password Change */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -195,12 +118,26 @@ const CompanySettings = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
-            <Input type={showCurrent ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="كلمة المرور الحالية" dir="ltr" className="pl-10" />
+            <Input
+              type={showCurrent ? "text" : "password"}
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="كلمة المرور الحالية"
+              dir="ltr"
+              className="pl-10"
+            />
             <PasswordToggle show={showCurrent} onToggle={setShowCurrent} />
           </div>
           <div className="space-y-1">
             <div className="relative">
-              <Input type={showNew ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="كلمة المرور الجديدة (12 حرف على الأقل)" dir="ltr" className="pl-10" />
+              <Input
+                type={showNew ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="يرجى إدخال كلمة مرور لا تقل عن 12 حرف"
+                dir="ltr"
+                className="pl-10"
+              />
               <PasswordToggle show={showNew} onToggle={setShowNew} />
             </div>
             {newPassword.length > 0 && newPassword.length < 12 && (
@@ -209,7 +146,14 @@ const CompanySettings = () => {
           </div>
           <div className="space-y-1">
             <div className="relative">
-              <Input type={showConfirm ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="تأكيد كلمة المرور الجديدة" dir="ltr" className="pl-10" />
+              <Input
+                type={showConfirm ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="تأكيد كلمة المرور الجديدة"
+                dir="ltr"
+                className="pl-10"
+              />
               <PasswordToggle show={showConfirm} onToggle={setShowConfirm} />
             </div>
             {confirmPassword.length > 0 && newPassword !== confirmPassword && (

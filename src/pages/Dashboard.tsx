@@ -2,7 +2,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import SuperAdminDashboard from "@/pages/admin/SuperAdminDashboard";
 import CompanyAdminDashboard from "@/pages/admin/CompanyAdminDashboard";
-import CustomerDashboard from "@/pages/CustomerDashboard";
 
 const Dashboard = () => {
   const { user, role, loading, organization } = useAuth();
@@ -17,20 +16,20 @@ const Dashboard = () => {
 
   if (!user) return <Navigate to="/login" replace />;
 
+  // Check if organization is pending approval
   if (role === "admin" && organization && organization.approval_status === "pending") {
     return <OrgPendingScreen />;
   }
 
+  // Check if organization is disabled
   if (role === "admin" && organization && !organization.is_active) {
     return <OrgDisabledScreen />;
   }
 
   if (role === "super_admin") return <SuperAdminDashboard />;
   if (role === "admin") return <CompanyAdminDashboard />;
-  if (role === "customer") return <CustomerDashboard />;
 
-  // Fallback for any logged in user without specific role
-  return <CustomerDashboard />;
+  return <Navigate to="/login" replace />;
 };
 
 const OrgDisabledScreen = () => {
@@ -43,7 +42,10 @@ const OrgDisabledScreen = () => {
         </div>
         <h1 className="text-2xl font-bold text-foreground">الحساب معطّل</h1>
         <p className="text-muted-foreground">تم تعطيل حساب شركتك. تواصل مع إدارة المنصة لمزيد من المعلومات.</p>
-        <button onClick={signOut} className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition">
+        <button
+          onClick={signOut}
+          className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition"
+        >
           تسجيل الخروج
         </button>
       </div>
@@ -60,8 +62,11 @@ const OrgPendingScreen = () => {
           <span className="text-3xl">⏳</span>
         </div>
         <h1 className="text-2xl font-bold text-foreground">حسابك قيد المراجعة</h1>
-        <p className="text-muted-foreground">تم استلام طلبك بنجاح وهو قيد المراجعة من قبل إدارة المنصة.</p>
-        <button onClick={signOut} className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition">
+        <p className="text-muted-foreground">تم استلام طلبك بنجاح وهو قيد المراجعة من قبل إدارة المنصة. سيتم تفعيل متجرك بعد الموافقة.</p>
+        <button
+          onClick={signOut}
+          className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition"
+        >
           تسجيل الخروج
         </button>
       </div>

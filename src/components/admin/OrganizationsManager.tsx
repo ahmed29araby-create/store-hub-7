@@ -15,13 +15,6 @@ const storeTypeLabels: Record<string, string> = {
   clothing: "ملابس",
   accessories: "إكسسوارات",
   restaurant: "مطاعم",
-  pharmacy: "صيدلية",
-  electronics: "إلكترونيات وتقنية",
-  sports: "رياضة ولياقة",
-  gifts: "هدايا ومناسبات",
-  home_decor: "المنزل والديكور",
-  supermarket: "سوبرماركت",
-  kids_toys: "أطفال وألعاب",
 };
 
 const OrganizationsManager = () => {
@@ -191,13 +184,6 @@ const OrganizationsManager = () => {
                     <SelectItem value="clothing">ملابس</SelectItem>
                     <SelectItem value="accessories">إكسسوارات</SelectItem>
                     <SelectItem value="restaurant">مطاعم</SelectItem>
-                    <SelectItem value="pharmacy">صيدلية</SelectItem>
-                    <SelectItem value="electronics">إلكترونيات وتقنية</SelectItem>
-                    <SelectItem value="sports">رياضة ولياقة</SelectItem>
-                    <SelectItem value="gifts">هدايا ومناسبات</SelectItem>
-                    <SelectItem value="home_decor">المنزل والديكور</SelectItem>
-                    <SelectItem value="supermarket">سوبرماركت</SelectItem>
-                    <SelectItem value="kids_toys">أطفال وألعاب</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
