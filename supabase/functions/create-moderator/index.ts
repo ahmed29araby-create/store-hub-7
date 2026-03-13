@@ -20,31 +20,33 @@ Deno.serve(async (req) => {
     if (!authHeader?.startsWith("Bearer ")) throw new Error("Unauthorized");
     const token = authHeader.replace("Bearer ", "");
 
-    // Verify user via getUser
     const { data: { user: caller }, error: userError } = await supabaseAdmin.auth.getUser(token);
     if (userError || !caller) throw new Error("Unauthorized");
 
-    const userId = caller.id;
+    // Check caller is admin
+    const { data: callerProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", caller.id)
+      .single();
+
+    if (!callerProfile?.organization_id) throw new Error("No organization found");
 
     const { data: roleCheck } = await supabaseAdmin
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId)
-      .eq("role", "super_admin")
+      .eq("user_id", caller.id)
+      .eq("role", "admin")
       .single();
 
-    if (!roleCheck) throw new Error("Not a super admin");
+    if (!roleCheck) throw new Error("Not an admin");
 
-    const { name, email, password, store_type } = await req.json();
+    const { name, email, password, permissions } = await req.json();
 
-    if (!name || !email || !password || !store_type) {
-      throw new Error("Missing required fields");
-    }
-    if (password.length < 12) {
-      throw new Error("Password must be at least 12 characters");
-    }
+    if (!name || !email || !password) throw new Error("Missing required fields");
+    if (password.length < 8) throw new Error("Password must be at least 8 characters");
 
-    // Create auth user for admin
+    // Create moderator auth user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -54,32 +56,30 @@ Deno.serve(async (req) => {
 
     if (createError) throw createError;
 
-    // Create organization
-    const { data: org, error: orgError } = await supabaseAdmin
-      .from("organizations")
-      .insert({ name, email, store_type })
-      .select()
-      .single();
-
-    if (orgError) throw orgError;
-
-    // Link profile to org
-    await supabaseAdmin
-      .from("profiles")
-      .update({ organization_id: org.id })
-      .eq("user_id", newUser.user.id);
-
-    // Assign admin role
+    // Assign moderator role
     await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: newUser.user.id, role: "admin" });
+      .insert({ user_id: newUser.user.id, role: "moderator" });
 
-    // Create default store settings
+    // Link to same organization
     await supabaseAdmin
-      .from("store_settings")
-      .insert({ organization_id: org.id });
+      .from("profiles")
+      .update({ organization_id: callerProfile.organization_id })
+      .eq("user_id", newUser.user.id);
 
-    return new Response(JSON.stringify({ success: true, organization: org }), {
+    // Save permissions
+    await supabaseAdmin
+      .from("moderator_permissions")
+      .insert({
+        user_id: newUser.user.id,
+        organization_id: callerProfile.organization_id,
+        can_manage_products: permissions?.can_manage_products || false,
+        can_edit_prices: permissions?.can_edit_prices || false,
+        can_manage_orders: permissions?.can_manage_orders || false,
+        full_control: permissions?.full_control || false,
+      });
+
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
