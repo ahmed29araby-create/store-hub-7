@@ -28,19 +28,20 @@ Deno.serve(async (req) => {
       throw new Error("نوع المتجر غير صالح");
     }
 
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const emailExists = existingUsers?.users?.some(u => u.email === email);
-    if (emailExists) {
-      throw new Error("البريد الإلكتروني مسجل بالفعل");
-    }
-
+    // Try to create the user directly - Supabase will return error if email exists
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
       user_metadata: { display_name: store_name },
     });
-    if (createError) throw createError;
+
+    if (createError) {
+      if (createError.message?.includes("already been registered") || createError.message?.includes("email_exists")) {
+        throw new Error("البريد الإلكتروني مسجل بالفعل. استخدم بريد إلكتروني آخر أو سجل دخول بحسابك الحالي.");
+      }
+      throw createError;
+    }
 
     const { data: org, error: orgError } = await supabaseAdmin
       .from("organizations")
