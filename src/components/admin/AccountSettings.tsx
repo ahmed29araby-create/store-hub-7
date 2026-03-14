@@ -5,12 +5,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Eye, EyeOff, Mail, Lock, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ShieldCheck, UserPen } from "lucide-react";
 import { toast } from "sonner";
+
+const PasswordToggle = ({
+  show,
+  onToggle,
+}: {
+  show: boolean;
+  onToggle: (v: boolean) => void;
+}) => (
+  <button
+    type="button"
+    onMouseDown={() => onToggle(true)}
+    onMouseUp={() => onToggle(false)}
+    onMouseLeave={() => onToggle(false)}
+    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+  >
+    {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+  </button>
+);
 
 const AccountSettings = () => {
   const { user, profile, refreshUserData } = useAuth();
+
+  // Name change
+  const [newName, setNewName] = useState("");
+  const [nameLoading, setNameLoading] = useState(false);
 
   // Email change
   const [newEmail, setNewEmail] = useState("");
@@ -24,6 +45,25 @@ const AccountSettings = () => {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+  const handleNameChange = async () => {
+    if (!newName.trim()) return;
+    if (newName.trim() === profile?.display_name) return;
+    setNameLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ display_name: newName.trim() })
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      toast.success("تم تحديث الاسم بنجاح");
+      setNewName("");
+      await refreshUserData();
+    } catch (err: any) {
+      toast.error(err.message || "حدث خطأ أثناء تحديث الاسم");
+    }
+    setNameLoading(false);
+  };
 
   const handleEmailChange = async () => {
     if (!newEmail.trim()) return;
@@ -54,12 +94,10 @@ const AccountSettings = () => {
       toast.error("كلمة المرور الجديدة غير متطابقة");
       return;
     }
-
     if (currentPassword === newPassword) {
       toast.info("كلمة المرور الجديدة هي نفس كلمة المرور الحالية");
       return;
     }
-
     setPasswordLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("update-admin-credentials", {
@@ -77,24 +115,6 @@ const AccountSettings = () => {
     setPasswordLoading(false);
   };
 
-  const PasswordToggle = ({
-    show,
-    onToggle,
-  }: {
-    show: boolean;
-    onToggle: (v: boolean) => void;
-  }) => (
-    <button
-      type="button"
-      onMouseDown={() => onToggle(true)}
-      onMouseUp={() => onToggle(false)}
-      onMouseLeave={() => onToggle(false)}
-      className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-    >
-      {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-    </button>
-  );
-
   return (
     <div className="max-w-xl mx-auto space-y-6">
       {/* Header */}
@@ -106,10 +126,42 @@ const AccountSettings = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-medium">مسؤول المنصة</p>
-              <p className="text-xl font-bold text-foreground">{profile?.email || user?.email}</p>
-              <p className="text-sm text-muted-foreground">{profile?.display_name}</p>
+              <p className="text-xl font-bold text-foreground">{profile?.display_name}</p>
+              <p className="text-sm text-muted-foreground">{profile?.email || user?.email}</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Name Change */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <UserPen className="w-4 h-4" />
+            تعديل الاسم
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>الاسم الحالي</Label>
+            <p className="text-sm font-medium text-muted-foreground">{profile?.display_name}</p>
+          </div>
+          <div className="space-y-2">
+            <Label>الاسم الجديد</Label>
+            <Input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="أدخل الاسم الجديد"
+            />
+          </div>
+          <Button
+            onClick={handleNameChange}
+            disabled={!newName.trim() || nameLoading}
+            className="w-full"
+          >
+            {nameLoading ? "جاري التحديث..." : "تحديث الاسم"}
+          </Button>
         </CardContent>
       </Card>
 
@@ -154,20 +206,18 @@ const AccountSettings = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="relative">
-              <Input
-                type={showCurrent ? "text" : "password"}
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="كلمة المرور الحالية"
-                dir="ltr"
-                className="pl-10"
-              />
-              <PasswordToggle show={showCurrent} onToggle={setShowCurrent} />
-            </div>
+          <div className="relative">
+            <Input
+              type={showCurrent ? "text" : "password"}
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="كلمة المرور الحالية"
+              dir="ltr"
+              className="pl-10"
+            />
+            <PasswordToggle show={showCurrent} onToggle={setShowCurrent} />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <div className="relative">
               <Input
                 type={showNew ? "text" : "password"}
@@ -183,7 +233,7 @@ const AccountSettings = () => {
               <p className="text-xs text-destructive">كلمة المرور يجب أن تكون 12 حرف على الأقل</p>
             )}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <div className="relative">
               <Input
                 type={showConfirm ? "text" : "password"}

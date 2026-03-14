@@ -5,11 +5,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Lock, User, Mail, UserPen } from "lucide-react";
 import { toast } from "sonner";
 
+const PasswordToggle = ({ show, onToggle }: { show: boolean; onToggle: (v: boolean) => void }) => (
+  <button
+    type="button"
+    onMouseDown={() => onToggle(true)}
+    onMouseUp={() => onToggle(false)}
+    onMouseLeave={() => onToggle(false)}
+    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+  >
+    {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+  </button>
+);
+
 const CompanySettings = () => {
-  const { profile, organization } = useAuth();
+  const { user, profile, organization, refreshUserData } = useAuth();
+
+  // Name change
+  const [newName, setNewName] = useState("");
+  const [nameLoading, setNameLoading] = useState(false);
+
+  // Email change
+  const [newEmail, setNewEmail] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
+
+  // Password change
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -17,6 +39,45 @@ const CompanySettings = () => {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const handleNameChange = async () => {
+    if (!newName.trim()) return;
+    if (newName.trim() === profile?.display_name) return;
+    setNameLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ display_name: newName.trim() })
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      toast.success("تم تحديث الاسم بنجاح");
+      setNewName("");
+      await refreshUserData();
+    } catch (err: any) {
+      toast.error(err.message || "حدث خطأ أثناء تحديث الاسم");
+    }
+    setNameLoading(false);
+  };
+
+  const handleEmailChange = async () => {
+    if (!newEmail.trim()) return;
+    const currentEmail = profile?.email || user?.email;
+    if (newEmail.trim().toLowerCase() === currentEmail?.toLowerCase()) return;
+    setEmailLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("update-admin-credentials", {
+        body: { new_email: newEmail },
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      toast.success("تم تحديث البريد الإلكتروني بنجاح! سجّل دخول بالبريد الجديد.");
+      setNewEmail("");
+      await refreshUserData();
+    } catch (err: any) {
+      toast.error(err.message || "حدث خطأ أثناء تحديث البريد الإلكتروني");
+    }
+    setEmailLoading(false);
+  };
 
   const handleChangePassword = async () => {
     if (newPassword.length < 12) {
@@ -34,7 +95,6 @@ const CompanySettings = () => {
 
     setLoading(true);
     try {
-      // Verify current password
       const email = profile?.email;
       if (!email) throw new Error("لم يتم العثور على البريد الإلكتروني");
 
@@ -61,17 +121,18 @@ const CompanySettings = () => {
     setLoading(false);
   };
 
-  const PasswordToggle = ({ show, onToggle }: { show: boolean; onToggle: (v: boolean) => void }) => (
-    <button
-      type="button"
-      onMouseDown={() => onToggle(true)}
-      onMouseUp={() => onToggle(false)}
-      onMouseLeave={() => onToggle(false)}
-      className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-    >
-      {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-    </button>
-  );
+  const storeTypeLabels: Record<string, string> = {
+    clothing: "ملابس",
+    accessories: "إكسسوارات",
+    restaurant: "مطاعم",
+    pharmacy: "صيدلية",
+    electronics: "إلكترونيات وتقنية",
+    sports: "رياضة ولياقة",
+    gifts: "هدايا ومناسبات",
+    home_decor: "المنزل والديكور",
+    supermarket: "سوبرماركت",
+    kids_toys: "أطفال وألعاب",
+  };
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
@@ -93,22 +154,76 @@ const CompanySettings = () => {
           </div>
           <div>
             <Label className="text-muted-foreground text-xs">نوع المتجر</Label>
-            <p className="font-medium">
-              {organization?.store_type === "clothing" && "ملابس"}
-              {organization?.store_type === "accessories" && "إكسسوارات"}
-              {organization?.store_type === "restaurant" && "مطاعم"}
-              {organization?.store_type === "pharmacy" && "صيدلية"}
-              {organization?.store_type === "electronics" && "إلكترونيات وتقنية"}
-              {organization?.store_type === "sports" && "رياضة ولياقة"}
-              {organization?.store_type === "gifts" && "هدايا ومناسبات"}
-              {organization?.store_type === "home_decor" && "المنزل والديكور"}
-              {organization?.store_type === "supermarket" && "سوبرماركت"}
-              {organization?.store_type === "kids_toys" && "أطفال وألعاب"}
-            </p>
+            <p className="font-medium">{storeTypeLabels[organization?.store_type || ""] || organization?.store_type}</p>
           </div>
         </CardContent>
       </Card>
 
+      {/* Name Change */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <UserPen className="w-4 h-4" />
+            تعديل الاسم
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>الاسم الحالي</Label>
+            <p className="text-sm font-medium text-muted-foreground">{profile?.display_name}</p>
+          </div>
+          <div className="space-y-2">
+            <Label>الاسم الجديد</Label>
+            <Input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="أدخل الاسم الجديد"
+            />
+          </div>
+          <Button
+            onClick={handleNameChange}
+            disabled={!newName.trim() || nameLoading}
+            className="w-full"
+          >
+            {nameLoading ? "جاري التحديث..." : "تحديث الاسم"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Email Change */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Mail className="w-4 h-4" />
+            تعديل البريد الإلكتروني
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>البريد الإلكتروني الجديد</Label>
+            <Input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              placeholder="new@email.com"
+              dir="ltr"
+            />
+          </div>
+          <Button
+            onClick={handleEmailChange}
+            disabled={!newEmail.trim() || emailLoading}
+            className="w-full"
+          >
+            {emailLoading ? "جاري التحديث..." : "تحديث البريد الإلكتروني"}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            سيتم تحديث البريد الإلكتروني مباشرة. استخدم البريد الجديد لتسجيل الدخول.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Password Change */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
