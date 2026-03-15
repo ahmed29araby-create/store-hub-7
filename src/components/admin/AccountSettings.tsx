@@ -111,7 +111,8 @@ const AccountSettings = () => {
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      toast.error(err.message || "حدث خطأ أثناء تغيير كلمة المرور");
+      const msg = typeof err?.message === 'string' ? err.message : "حدث خطأ أثناء تغيير كلمة المرور";
+      toast.error(msg.includes("Edge function") || msg.includes("non-2xx") ? "حدث خطأ أثناء تغيير كلمة المرور" : msg);
     }
     setPasswordLoading(false);
   };

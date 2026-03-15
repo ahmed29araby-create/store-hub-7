@@ -24,7 +24,14 @@ const SetupSuperAdmin = () => {
       if (data.error) throw new Error(data.error);
       toast.success("تم إنشاء حساب Super Admin بنجاح! سجل دخول الآن.");
     } catch (err: any) {
-      toast.error(err.message);
+      const msg = typeof err?.message === 'string' ? err.message : "حدث خطأ";
+      if (msg.includes("already exists")) {
+        toast.error("حساب مسؤول المنصة موجود بالفعل. سجل دخول من صفحة تسجيل الدخول.");
+      } else if (msg.includes("Edge function") || msg.includes("non-2xx")) {
+        toast.error("حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى.");
+      } else {
+        toast.error(msg);
+      }
     }
     setLoading(false);
   };
