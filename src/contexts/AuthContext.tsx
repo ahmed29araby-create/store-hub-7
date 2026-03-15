@@ -31,12 +31,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [lockUntil, setLockUntil] = useState<number | null>(null);
 
   const fetchUserData = async (userId: string) => {
+    // Use maybeSingle to avoid 406 errors when no row exists
     const [{ data: roleData }, { data: profileData }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", userId).single(),
-      supabase.from("profiles").select("display_name, email, organization_id").eq("user_id", userId).single(),
+      supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+      supabase.from("profiles").select("display_name, email, organization_id").eq("user_id", userId).maybeSingle(),
     ]);
 
     if (roleData) setRole(roleData.role as "super_admin" | "admin");
+    else setRole(null);
+    
     if (profileData) {
       setProfile(profileData);
       if (profileData.organization_id) {
@@ -47,6 +50,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .single();
         if (orgData) setOrganization(orgData as any);
       }
+    } else {
+      setProfile(null);
     }
   };
 
