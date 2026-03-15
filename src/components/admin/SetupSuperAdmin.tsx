@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errorMessages";
 
 const SetupSuperAdmin = () => {
   const [email, setEmail] = useState("ahmed29araby@gmail.com");
