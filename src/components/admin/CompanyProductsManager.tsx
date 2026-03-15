@@ -1,63 +1,40 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Pencil, Trash2, Upload, X, Image, MoreVertical, Copy } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, Pencil, Trash2, Image, MoreVertical, Copy, Eye, EyeOff, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
-
-const MAX_IMAGE_SIZE = 800; // max width/height in pixels
-const JPEG_QUALITY = 0.7;
-
-const compressImage = (file: File): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      let { width, height } = img;
-      if (width > MAX_IMAGE_SIZE || height > MAX_IMAGE_SIZE) {
-        if (width > height) {
-          height = (height / width) * MAX_IMAGE_SIZE;
-          width = MAX_IMAGE_SIZE;
-        } else {
-          width = (width / height) * MAX_IMAGE_SIZE;
-          height = MAX_IMAGE_SIZE;
-        }
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error("Compression failed"))),
-        "image/jpeg",
-        JPEG_QUALITY
-      );
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-};
+import CategoryTabs, { type Category } from "./products/CategoryTabs";
+import ProductFormDialog, { compressImage } from "./products/ProductFormDialog";
 
 const CompanyProductsManager = () => {
   const { organization } = useAuth();
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", description: "", price: "" });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch categories
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories", organization?.id],
+    queryFn: async () => {
+      if (!organization) return [];
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("organization_id", organization.id)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data as Category[];
+    },
+    enabled: !!organization,
+  });
+
+  // Fetch products
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["company-products", organization?.id],
     queryFn: async () => {
@@ -73,15 +50,81 @@ const CompanyProductsManager = () => {
     enabled: !!organization,
   });
 
+  // Product counts per category
+  const productCounts: Record<string, number> = {};
+  products.forEach((p) => {
+    const cat = p.category || "uncategorized";
+    productCounts[cat] = (productCounts[cat] || 0) + 1;
+  });
+
+  // Filtered products
+  const filteredProducts = selectedCategoryId
+    ? products.filter((p) => p.category === selectedCategoryId)
+    : products;
+
+  // Category mutations
+  const addCategoryMutation = useMutation({
+    mutationFn: async (name: string) => {
+      if (!organization) throw new Error("No org");
+      const { error } = await supabase.from("categories").insert({
+        name,
+        organization_id: organization.id,
+        sort_order: categories.length,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم إضافة القسم");
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const editCategoryMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { error } = await supabase.from("categories").update({ name }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم تعديل القسم");
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
+
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // Clear category from products first
+      await supabase.from("products").update({ category: null }).eq("category", id);
+      const { error } = await supabase.from("categories").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف القسم");
+      if (selectedCategoryId) setSelectedCategoryId(null);
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["company-products"] });
+    },
+  });
+
+  const toggleCategoryVisibility = useMutation({
+    mutationFn: async ({ id, visible }: { id: string; visible: boolean }) => {
+      const { error } = await supabase.from("categories").update({ is_visible: visible }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم تحديث القسم");
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
+
+  // Product mutations
   const uploadImage = async (file: File): Promise<string | null> => {
     if (!organization) return null;
     setUploading(true);
     try {
       const compressed = await compressImage(file);
       const fileName = `${organization.id}/${Date.now()}.jpg`;
-      const { error } = await supabase.storage
-        .from("product-images")
-        .upload(fileName, compressed, { contentType: "image/jpeg" });
+      const { error } = await supabase.storage.from("product-images").upload(fileName, compressed, { contentType: "image/jpeg" });
       if (error) throw error;
       const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
       return urlData.publicUrl;
@@ -91,27 +134,22 @@ const CompanyProductsManager = () => {
   };
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ form, imageFile, keepExistingImage }: { form: any; imageFile: File | null; keepExistingImage: boolean }) => {
       if (!organization) throw new Error("No organization");
-
-      let imageUrl: string | null = imagePreview && !imageFile ? imagePreview : null;
-      if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
-      }
+      let imageUrl: string | null = keepExistingImage ? (editingProduct?.image_url || null) : null;
+      if (imageFile) imageUrl = await uploadImage(imageFile);
 
       const payload: any = {
         name: form.name,
         description: form.description || null,
         price: parseFloat(form.price) || 0,
         organization_id: organization.id,
+        category: form.categoryId || null,
       };
-      // Only update image if a new one was selected or we're creating
-      if (imageFile || !editId) {
-        payload.image_url = imageUrl;
-      }
+      if (imageFile || !editingProduct) payload.image_url = imageUrl;
 
-      if (editId) {
-        const { error } = await supabase.from("products").update(payload).eq("id", editId);
+      if (editingProduct) {
+        const { error } = await supabase.from("products").update(payload).eq("id", editingProduct.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("products").insert(payload);
@@ -119,11 +157,12 @@ const CompanyProductsManager = () => {
       }
     },
     onSuccess: () => {
-      toast.success(editId ? "تم تعديل المنتج" : "تم إضافة المنتج");
+      toast.success(editingProduct ? "تم تعديل المنتج" : "تم إضافة المنتج");
       queryClient.invalidateQueries({ queryKey: ["company-products"] });
-      resetForm();
+      setDialogOpen(false);
+      setEditingProduct(null);
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const deleteMutation = useMutation({
@@ -139,7 +178,7 @@ const CompanyProductsManager = () => {
 
   const duplicateMutation = useMutation({
     mutationFn: async (product: any) => {
-      if (!organization) throw new Error("No organization");
+      if (!organization) throw new Error("No org");
       const { error } = await supabase.from("products").insert({
         name: `${product.name} (نسخة)`,
         description: product.description,
@@ -147,6 +186,7 @@ const CompanyProductsManager = () => {
         image_url: product.image_url,
         organization_id: organization.id,
         is_available: product.is_available,
+        category: product.category,
       });
       if (error) throw error;
     },
@@ -154,133 +194,102 @@ const CompanyProductsManager = () => {
       toast.success("تم تكرار المنتج");
       queryClient.invalidateQueries({ queryKey: ["company-products"] });
     },
-    onError: (err: Error) => toast.error(err.message),
   });
 
-  const resetForm = () => {
-    setOpen(false);
-    setEditId(null);
-    setForm({ name: "", description: "", price: "" });
-    setImageFile(null);
-    setImagePreview(null);
-  };
+  const toggleAvailability = useMutation({
+    mutationFn: async ({ id, available }: { id: string; available: boolean }) => {
+      const { error } = await supabase.from("products").update({ is_available: available }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم تحديث المنتج");
+      queryClient.invalidateQueries({ queryKey: ["company-products"] });
+    },
+  });
+
+  const moveProductMutation = useMutation({
+    mutationFn: async ({ productId, categoryId }: { productId: string; categoryId: string | null }) => {
+      const { error } = await supabase.from("products").update({ category: categoryId }).eq("id", productId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم نقل المنتج");
+      queryClient.invalidateQueries({ queryKey: ["company-products"] });
+    },
+  });
 
   const openEdit = (product: any) => {
-    setEditId(product.id);
-    setForm({
-      name: product.name,
-      description: product.description || "",
-      price: product.price.toString(),
-    });
-    setImagePreview(product.image_url || null);
-    setImageFile(null);
-    setOpen(true);
+    setEditingProduct(product);
+    setDialogOpen(true);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("يرجى اختيار ملف صورة");
-      return;
-    }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+  const getCategoryName = (catId: string | null) => {
+    if (!catId) return "بدون قسم";
+    return categories.find((c) => c.id === catId)?.name || "بدون قسم";
   };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-foreground">المنتجات</h2>
-        <Dialog open={open} onOpenChange={(o) => { if (!o) resetForm(); else setOpen(true); }}>
-          <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 ml-2" />إضافة منتج</Button>
-          </DialogTrigger>
-          <DialogContent dir="rtl">
-            <DialogHeader>
-              <DialogTitle>{editId ? "تعديل المنتج" : "إضافة منتج جديد"}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>اسم المنتج</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>الوصف</Label>
-                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>السعر</Label>
-                <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-              </div>
-
-              {/* Image Upload */}
-              <div className="space-y-2">
-                <Label>صورة المنتج</Label>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-                {imagePreview ? (
-                  <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
-                    <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
-                    <button
-                      onClick={removeImage}
-                      className="absolute top-2 left-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:opacity-80 transition"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-                  >
-                    <Upload className="w-6 h-6" />
-                    <span className="text-sm">اضغط لرفع صورة</span>
-                  </button>
-                )}
-              </div>
-
-              <Button
-                className="w-full"
-                onClick={() => saveMutation.mutate()}
-                disabled={!form.name || saveMutation.isPending || uploading}
-              >
-                {uploading ? "جاري رفع الصورة..." : saveMutation.isPending ? "جاري الحفظ..." : editId ? "تعديل" : "إضافة"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <h2 className="text-xl font-bold text-foreground">المنتجات ({products.length})</h2>
+        <Button onClick={() => { setEditingProduct(null); setDialogOpen(true); }}>
+          <Plus className="w-4 h-4 ml-2" />إضافة منتج
+        </Button>
       </div>
 
+      {/* Category Tabs */}
+      <CategoryTabs
+        categories={categories}
+        selectedCategoryId={selectedCategoryId}
+        onSelect={setSelectedCategoryId}
+        onAdd={(name) => addCategoryMutation.mutate(name)}
+        onEdit={(id, name) => editCategoryMutation.mutate({ id, name })}
+        onDelete={(id) => deleteCategoryMutation.mutate(id)}
+        onToggleVisibility={(id, visible) => toggleCategoryVisibility.mutate({ id, visible })}
+        productCounts={productCounts}
+      />
+
+      {/* Product Form Dialog */}
+      <ProductFormDialog
+        open={dialogOpen}
+        onOpenChange={(o) => { if (!o) { setDialogOpen(false); setEditingProduct(null); } else setDialogOpen(true); }}
+        categories={categories}
+        isEditing={!!editingProduct}
+        initialData={editingProduct ? {
+          name: editingProduct.name,
+          description: editingProduct.description || "",
+          price: editingProduct.price.toString(),
+          categoryId: editingProduct.category || "",
+          imagePreview: editingProduct.image_url,
+        } : undefined}
+        defaultCategoryId={selectedCategoryId}
+        onSave={(form, imageFile, keepExisting) => saveMutation.mutate({ form, imageFile, keepExistingImage: keepExisting })}
+        saving={saveMutation.isPending}
+        uploading={uploading}
+      />
+
+      {/* Products Table */}
       {isLoading ? (
         <div className="text-center py-8 text-muted-foreground">جاري التحميل...</div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">لا توجد منتجات بعد. أضف أول منتج!</div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          {selectedCategoryId ? "لا توجد منتجات في هذا القسم" : "لا توجد منتجات بعد. أضف أول منتج!"}
+        </div>
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="text-right">المنتج</TableHead>
+                <TableHead className="text-right">القسم</TableHead>
                 <TableHead className="text-right">السعر</TableHead>
                 <TableHead className="text-right">إجراءات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.id}>
+              {filteredProducts.map((product) => (
+                <TableRow key={product.id} className={!product.is_available ? "opacity-50" : ""}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {product.image_url ? (
@@ -296,15 +305,32 @@ const CompanyProductsManager = () => {
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{getCategoryName(product.category)}</TableCell>
                   <TableCell>{product.price} ج.م</TableCell>
                   <TableCell>
                     <div className="flex gap-1 items-center">
+                      {/* Visibility toggle */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => toggleAvailability.mutate({ id: product.id, available: !product.is_available })}
+                        title={product.is_available ? "إخفاء المنتج" : "إظهار المنتج"}
+                      >
+                        {product.is_available ? (
+                          <Eye className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <EyeOff className="w-4 h-4 text-destructive" />
+                        )}
+                      </Button>
+                      {/* Edit */}
                       <Button variant="ghost" size="icon" onClick={() => openEdit(product)}>
                         <Pencil className="w-4 h-4" />
                       </Button>
+                      {/* Delete */}
                       <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteMutation.mutate(product.id)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
+                      {/* More actions */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
@@ -316,6 +342,26 @@ const CompanyProductsManager = () => {
                             <Copy className="w-4 h-4 ml-2" />
                             تكرار المنتج
                           </DropdownMenuItem>
+                          {categories.length > 0 && (
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                <ArrowRightLeft className="w-4 h-4 ml-2" />
+                                نقل إلى قسم
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                {categories
+                                  .filter((c) => c.id !== product.category)
+                                  .map((c) => (
+                                    <DropdownMenuItem
+                                      key={c.id}
+                                      onClick={() => moveProductMutation.mutate({ productId: product.id, categoryId: c.id })}
+                                    >
+                                      {c.name}
+                                    </DropdownMenuItem>
+                                  ))}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
