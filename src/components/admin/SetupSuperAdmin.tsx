@@ -8,8 +8,8 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 const SetupSuperAdmin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("ahmed29araby@gmail.com");
+  const [password, setPassword] = useState("ahmedaraby29624367");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
