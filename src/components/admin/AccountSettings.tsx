@@ -80,7 +80,8 @@ const AccountSettings = () => {
       setNewEmail("");
       await refreshUserData();
     } catch (err: any) {
-      toast.error(err.message || "حدث خطأ أثناء تحديث البريد الإلكتروني");
+      const msg = typeof err?.message === 'string' ? err.message : "حدث خطأ أثناء تحديث البريد الإلكتروني";
+      toast.error(msg.includes("Edge function") || msg.includes("non-2xx") ? "حدث خطأ أثناء تحديث البريد الإلكتروني" : msg);
     }
     setEmailLoading(false);
   };
