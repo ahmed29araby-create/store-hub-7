@@ -68,7 +68,7 @@ const SetupSuperAdmin = () => {
               <p className="text-xs text-destructive">كلمة المرور يجب أن تكون 8 أحرف على الأقل</p>
             )}
           </div>
-          <Button className="w-full" onClick={handleSetup} disabled={!email || password.length < 12 || loading}>
+          <Button className="w-full" onClick={handleSetup} disabled={!email || password.length < 8 || loading}>
             {loading ? "جاري الإنشاء..." : "إنشاء الحساب"}
           </Button>
         </CardContent>

@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     const { email, password } = await req.json();
 
     if (!email || !password) throw new Error("Missing email or password");
-    if (password.length < 12) throw new Error("Password must be at least 12 characters");
+    if (password.length < 8) throw new Error("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
 
     // Check if any super_admin exists
     const { data: existingAdmin } = await supabaseAdmin
