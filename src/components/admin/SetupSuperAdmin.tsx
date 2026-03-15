@@ -18,21 +18,14 @@ const SetupSuperAdmin = () => {
     if (!email || password.length < 12) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("setup-super-admin", {
+      const res = await supabase.functions.invoke("setup-super-admin", {
         body: { email, password },
       });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      toast.success("تم إنشاء حساب Super Admin بنجاح! سجل دخول الآن.");
+      if (res.data?.error) throw new Error(res.data.error);
+      if (res.error) throw res.error;
+      toast.success("تم إنشاء حساب مسؤول المنصة بنجاح! سجل دخول الآن.");
     } catch (err: any) {
-      const msg = typeof err?.message === 'string' ? err.message : "حدث خطأ";
-      if (msg.includes("already exists")) {
-        toast.error("حساب مسؤول المنصة موجود بالفعل. سجل دخول من صفحة تسجيل الدخول.");
-      } else if (msg.includes("Edge function") || msg.includes("non-2xx")) {
-        toast.error("حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى.");
-      } else {
-        toast.error(msg);
-      }
+      toast.error(getErrorMessage(err, "حدث خطأ أثناء إنشاء الحساب"));
     }
     setLoading(false);
   };
