@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import SetupPage from "./pages/Setup";
 import CustomerRegister from "./pages/CustomerRegister";
+import MyAccount from "./pages/MyAccount";
 import ClothingStore from "./pages/store/ClothingStore";
 import AccessoriesStore from "./pages/store/AccessoriesStore";
 import RestaurantStore from "./pages/store/RestaurantStore";

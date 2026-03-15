@@ -29,7 +29,8 @@ const Dashboard = () => {
   if (role === "super_admin") return <SuperAdminDashboard />;
   if (role === "admin") return <CompanyAdminDashboard />;
 
-  return <Navigate to="/login" replace />;
+  // Customer (no admin/super_admin role) → redirect to my-account
+  return <Navigate to="/my-account" replace />;
 };
 
 const OrgDisabledScreen = () => {
