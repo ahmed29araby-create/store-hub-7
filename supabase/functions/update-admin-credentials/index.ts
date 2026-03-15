@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     const updates: any = {};
     if (new_email) updates.email = new_email;
     if (new_password) {
-      if (new_password.length < 12) throw new Error("كلمة المرور يجب أن تكون 12 حرف على الأقل");
+      if (new_password.length < 8) throw new Error("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
       updates.password = new_password;
     }
     if (new_email) updates.email_confirm = true;

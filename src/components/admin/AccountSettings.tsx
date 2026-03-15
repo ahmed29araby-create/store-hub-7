@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getErrorMessage } from "@/lib/errorMessages";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,7 @@ const AccountSettings = () => {
       setNewName("");
       await refreshUserData();
     } catch (err: any) {
-      toast.error(err.message || "حدث خطأ أثناء تحديث الاسم");
+      toast.error(getErrorMessage(err, "حدث خطأ أثناء تحديث الاسم"));
     }
     setNameLoading(false);
   };
@@ -71,16 +72,16 @@ const AccountSettings = () => {
     if (newEmail.trim().toLowerCase() === currentEmail?.toLowerCase()) return;
     setEmailLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("update-admin-credentials", {
+      const res = await supabase.functions.invoke("update-admin-credentials", {
         body: { new_email: newEmail, current_password: undefined },
       });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (res.error) throw new Error(getErrorMessage(res.error, "حدث خطأ أثناء تحديث البريد"));
+      if (res.data?.error) throw new Error(res.data.error);
       toast.success("تم تحديث البريد الإلكتروني بنجاح! سجّل دخول بالبريد الجديد.");
       setNewEmail("");
       await refreshUserData();
     } catch (err: any) {
-      toast.error(err.message || "حدث خطأ أثناء تحديث البريد الإلكتروني");
+      toast.error(getErrorMessage(err, "حدث خطأ أثناء تحديث البريد الإلكتروني"));
     }
     setEmailLoading(false);
   };
@@ -100,17 +101,17 @@ const AccountSettings = () => {
     }
     setPasswordLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("update-admin-credentials", {
+      const res = await supabase.functions.invoke("update-admin-credentials", {
         body: { current_password: currentPassword, new_password: newPassword },
       });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (res.error) throw new Error(getErrorMessage(res.error, "حدث خطأ أثناء تغيير كلمة المرور"));
+      if (res.data?.error) throw new Error(res.data.error);
       toast.success("تم تغيير كلمة المرور بنجاح!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      toast.error(err.message || "حدث خطأ أثناء تغيير كلمة المرور");
+      toast.error(getErrorMessage(err, "حدث خطأ أثناء تغيير كلمة المرور"));
     }
     setPasswordLoading(false);
   };
@@ -142,10 +143,6 @@ const AccountSettings = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>الاسم الحالي</Label>
-            <p className="text-sm font-medium text-muted-foreground">{profile?.display_name}</p>
-          </div>
           <div className="space-y-2">
             <Label>الاسم الجديد</Label>
             <Input

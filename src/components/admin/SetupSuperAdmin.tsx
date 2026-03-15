@@ -6,25 +6,26 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errorMessages";
 
 const SetupSuperAdmin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("ahmed29araby@gmail.com");
+  const [password, setPassword] = useState("ahmedaraby29624367");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSetup = async () => {
-    if (!email || password.length < 12) return;
+    if (!email || password.length < 8) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("setup-super-admin", {
+      const res = await supabase.functions.invoke("setup-super-admin", {
         body: { email, password },
       });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      toast.success("تم إنشاء حساب Super Admin بنجاح! سجل دخول الآن.");
+      if (res.data?.error) throw new Error(res.data.error);
+      if (res.error) throw res.error;
+      toast.success("تم إنشاء حساب مسؤول المنصة بنجاح! سجل دخول الآن.");
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(getErrorMessage(err, "حدث خطأ أثناء إنشاء الحساب"));
     }
     setLoading(false);
   };
@@ -44,7 +45,7 @@ const SetupSuperAdmin = () => {
             <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" />
           </div>
           <div className="space-y-2">
-            <Label>كلمة المرور (12 حرف على الأقل)</Label>
+            <Label>كلمة المرور (8 أحرف على الأقل)</Label>
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
@@ -63,11 +64,11 @@ const SetupSuperAdmin = () => {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            {password.length > 0 && password.length < 12 && (
-              <p className="text-xs text-destructive">كلمة المرور يجب أن تكون 12 حرف على الأقل</p>
+            {password.length > 0 && password.length < 8 && (
+              <p className="text-xs text-destructive">كلمة المرور يجب أن تكون 8 أحرف على الأقل</p>
             )}
           </div>
-          <Button className="w-full" onClick={handleSetup} disabled={!email || password.length < 12 || loading}>
+          <Button className="w-full" onClick={handleSetup} disabled={!email || password.length < 8 || loading}>
             {loading ? "جاري الإنشاء..." : "إنشاء الحساب"}
           </Button>
         </CardContent>
