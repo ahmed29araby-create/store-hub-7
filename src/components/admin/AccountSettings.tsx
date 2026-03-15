@@ -72,11 +72,11 @@ const AccountSettings = () => {
     if (newEmail.trim().toLowerCase() === currentEmail?.toLowerCase()) return;
     setEmailLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("update-admin-credentials", {
+      const res = await supabase.functions.invoke("update-admin-credentials", {
         body: { new_email: newEmail, current_password: undefined },
       });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (res.error) throw new Error(getErrorMessage(res.error, "حدث خطأ أثناء تحديث البريد"));
+      if (res.data?.error) throw new Error(res.data.error);
       toast.success("تم تحديث البريد الإلكتروني بنجاح! سجّل دخول بالبريد الجديد.");
       setNewEmail("");
       await refreshUserData();
