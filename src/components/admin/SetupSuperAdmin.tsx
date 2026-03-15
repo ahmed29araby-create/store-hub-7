@@ -45,7 +45,7 @@ const SetupSuperAdmin = () => {
             <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" />
           </div>
           <div className="space-y-2">
-            <Label>كلمة المرور (12 حرف على الأقل)</Label>
+            <Label>كلمة المرور (8 أحرف على الأقل)</Label>
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
