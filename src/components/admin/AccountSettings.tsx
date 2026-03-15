@@ -61,7 +61,7 @@ const AccountSettings = () => {
       setNewName("");
       await refreshUserData();
     } catch (err: any) {
-      toast.error(err.message || "حدث خطأ أثناء تحديث الاسم");
+      toast.error(getErrorMessage(err, "حدث خطأ أثناء تحديث الاسم"));
     }
     setNameLoading(false);
   };
