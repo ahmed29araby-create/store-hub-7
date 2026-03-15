@@ -6,19 +6,32 @@ import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { useFavorites } from "@/hooks/useFavorites";
 
 const ElectronicsStore = () => {
-  const { organization, products, isLoading, orgId } = useStoreProducts();
+  const { organization, products, groupedProducts, uncategorizedProducts, isLoading, orgId } = useStoreProducts();
   const { settings } = useStoreSettings(orgId);
   const { toggleFavorite, isFavorite } = useFavorites(orgId);
 
   if (isLoading) {
     return <div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
   }
-
   if (!organization) {
     return <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl"><p className="text-muted-foreground">المتجر غير موجود أو غير مفعّل</p></div>;
   }
 
-  const categories = settings?.categories?.length ? ["الكل", ...settings.categories] : ["الكل"];
+  const renderProductCard = (product: any, i: number) => (
+    <motion.div key={product.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="group cursor-pointer bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="aspect-[4/5] overflow-hidden bg-secondary relative">
+        {product.image_url && <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />}
+        <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
+          <Heart className={`w-4 h-4 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+        </button>
+      </div>
+      <div className="p-3">
+        <div className="flex items-center gap-1 mb-1">{[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-amber-400 text-amber-400" />)}</div>
+        <h4 className="font-medium text-foreground mb-1 text-sm">{product.name}</h4>
+        <p className="text-primary font-bold text-sm">{product.price.toLocaleString()} ج.م</p>
+      </div>
+    </motion.div>
+  );
 
   return (
     <div className="min-h-screen bg-background" dir="rtl" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -49,39 +62,32 @@ const ElectronicsStore = () => {
         </div>
       </motion.section>
 
-      {categories.length > 1 && (
-        <section className="max-w-7xl mx-auto px-6 pt-12">
-          <div className="flex gap-3 overflow-x-auto pb-4">
-            {categories.map((cat, i) => (<Button key={cat} variant={i === 0 ? "default" : "outline"} className="rounded-full whitespace-nowrap">{cat}</Button>))}
+      {groupedProducts.length > 0 ? (
+        groupedProducts.map((group, gi) => (
+          <section key={group.category.id} className="max-w-7xl mx-auto px-6 py-12">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: gi * 0.1 }} className="flex items-center gap-3 mb-8">
+              <h3 className="text-3xl font-bold">{group.category.name}</h3>
+              <span className="text-sm text-muted-foreground">({group.products.length})</span>
+            </motion.div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {group.products.map((p, i) => renderProductCard(p, i))}
+            </div>
+          </section>
+        ))
+      ) : products.length === 0 ? (
+        <section className="max-w-7xl mx-auto px-6 py-16">
+          <p className="text-center text-muted-foreground py-20">لا توجد منتجات حالياً</p>
+        </section>
+      ) : null}
+
+      {uncategorizedProducts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 py-12">
+          <h3 className="text-3xl font-bold mb-8">أخرى</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {uncategorizedProducts.map((p, i) => renderProductCard(p, i))}
           </div>
         </section>
       )}
-
-      <section className="max-w-7xl mx-auto px-6 py-12">
-        <h3 className="text-3xl font-bold mb-10">منتجاتنا</h3>
-        {products.length === 0 ? (
-          <p className="text-center text-muted-foreground py-20">لا توجد منتجات حالياً</p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {products.map((product, i) => (
-              <motion.div key={product.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="group cursor-pointer bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="aspect-[4/5] overflow-hidden bg-secondary relative">
-                  {product.image_url && <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />}
-                  <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
-                    <Heart className={`w-4 h-4 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
-                  </button>
-                  {product.category && <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">{product.category}</span>}
-                </div>
-                <div className="p-3">
-                  <div className="flex items-center gap-1 mb-1">{[...Array(5)].map((_, s) => <Star key={s} className="w-3 h-3 fill-amber-400 text-amber-400" />)}</div>
-                  <h4 className="font-medium text-foreground mb-1 text-sm">{product.name}</h4>
-                  <p className="text-primary font-bold text-sm">{product.price.toLocaleString()} ج.م</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </section>
 
       <footer className="border-t py-8 text-center text-sm text-muted-foreground"><p>© 2026 {organization.name} - جميع الحقوق محفوظة</p></footer>
     </div>

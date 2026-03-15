@@ -8,7 +8,7 @@ import { useParams } from "react-router-dom";
 
 const RestaurantStore = () => {
   const { orgId } = useParams();
-  const { organization, products, isLoading } = useStoreProducts();
+  const { organization, products, groupedProducts, uncategorizedProducts, isLoading } = useStoreProducts();
   const { settings } = useStoreSettings(orgId);
   const { toggleFavorite, isFavorite } = useFavorites(orgId);
 
@@ -20,7 +20,26 @@ const RestaurantStore = () => {
   const heroSubtitle = settings?.hero_subtitle || "أطباق مُعدّة بشغف من أجود المكونات الطازجة";
   const heroButton = settings?.hero_button_text || "اطلب الآن";
   const heroImage = settings?.hero_image_url || "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=80";
-  const categories = settings?.categories || [];
+
+  const renderProductCard = (product: any, i: number) => (
+    <motion.div key={product.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
+      <div className="aspect-[4/5] overflow-hidden relative">
+        {product.image_url ? (
+          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-secondary"><ShoppingBag className="w-12 h-12 opacity-20" /></div>
+        )}
+        <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
+          <Heart className={`w-4 h-4 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+        </button>
+      </div>
+      <div className="p-3">
+        <h4 className="font-semibold text-foreground text-sm mb-1">{product.name}</h4>
+        {product.description && <p className="text-xs text-muted-foreground mb-1 line-clamp-1">{product.description}</p>}
+        <p className="font-bold" style={{ color: "hsl(15, 80%, 50%)" }}>{product.price} ج.م</p>
+      </div>
+    </motion.div>
+  );
 
   return (
     <div className="min-h-screen" dir="rtl" style={{ backgroundColor: "hsl(30, 30%, 97%)", fontFamily: "'Inter', sans-serif" }}>
@@ -45,47 +64,33 @@ const RestaurantStore = () => {
         </div>
       </motion.section>
 
-      {categories.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 py-10">
-          <div className="flex flex-wrap gap-3 justify-center">
-            {categories.map((cat, i) => (
-              <motion.button key={cat} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="px-6 py-3 rounded-full border border-border bg-card text-foreground hover:bg-primary hover:text-primary-foreground transition-colors text-sm font-medium">{cat}</motion.button>
-            ))}
+      {/* Category sections */}
+      {groupedProducts.length > 0 ? (
+        groupedProducts.map((group, gi) => (
+          <section key={group.category.id} className="max-w-7xl mx-auto px-6 py-12">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: gi * 0.1 }} className="flex items-center gap-3 mb-8">
+              <h3 className="text-3xl font-bold" style={{ fontFamily: "'Satisfy', cursive", color: "hsl(15, 80%, 50%)" }}>{group.category.name}</h3>
+              <span className="text-sm text-muted-foreground">({group.products.length} أصناف)</span>
+            </motion.div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {group.products.map((p, i) => renderProductCard(p, i))}
+            </div>
+          </section>
+        ))
+      ) : products.length === 0 ? (
+        <section className="max-w-7xl mx-auto px-6 py-16">
+          <div className="text-center py-12 text-muted-foreground">لا توجد أطباق حالياً</div>
+        </section>
+      ) : null}
+
+      {uncategorizedProducts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 py-12">
+          <h3 className="text-3xl font-bold mb-8" style={{ fontFamily: "'Satisfy', cursive", color: "hsl(15, 80%, 50%)" }}>أخرى</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {uncategorizedProducts.map((p, i) => renderProductCard(p, i))}
           </div>
         </section>
       )}
-
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        <div className="text-center mb-12">
-          <h3 className="text-4xl font-bold mb-2" style={{ fontFamily: "'Satisfy', cursive", color: "hsl(15, 80%, 50%)" }}>قائمة الطعام</h3>
-          <p className="text-muted-foreground">اختر من أشهى الأطباق</p>
-        </div>
-        {products.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">لا توجد أطباق حالياً</div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {products.map((product, i) => (
-              <motion.div key={product.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
-                <div className="aspect-[4/5] overflow-hidden relative">
-                  {product.image_url ? (
-                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-secondary"><ShoppingBag className="w-12 h-12 opacity-20" /></div>
-                  )}
-                  <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
-                    <Heart className={`w-4 h-4 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
-                  </button>
-                </div>
-                <div className="p-3">
-                  <h4 className="font-semibold text-foreground text-sm mb-1">{product.name}</h4>
-                  {product.description && <p className="text-xs text-muted-foreground mb-1 line-clamp-1">{product.description}</p>}
-                  <p className="font-bold" style={{ color: "hsl(15, 80%, 50%)" }}>{product.price} ج.م</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 };
