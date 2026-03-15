@@ -8,7 +8,7 @@ import { useParams } from "react-router-dom";
 
 const SupermarketStore = () => {
   const { orgId } = useParams();
-  const { organization, products, isLoading } = useStoreProducts();
+  const { organization, products, groupedProducts, uncategorizedProducts, isLoading } = useStoreProducts();
   const { settings } = useStoreSettings(orgId);
   const { toggleFavorite, isFavorite } = useFavorites(orgId);
 
@@ -17,7 +17,21 @@ const SupermarketStore = () => {
   const heroTitle = settings?.hero_title || "كل ما تحتاجه";
   const heroSubtitle = settings?.hero_subtitle || "مواد غذائية، خضار وفواكه طازجة بأسعار تنافسية";
   const heroButton = settings?.hero_button_text || "تسوق الآن";
-  const cats = settings?.categories || [];
+
+  const renderProductCard = (p: any, i: number) => (
+    <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="group bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer" style={{ border: "1px solid hsl(80,20%,90%)" }}>
+      <div className="aspect-[4/5] overflow-hidden relative" style={{ backgroundColor: "hsl(80,20%,95%)" }}>
+        {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center"><ShoppingCart className="w-10 h-10 opacity-20" /></div>}
+        <button onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id, p.organization_id); }} className="absolute top-2 left-2 w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
+          <Heart className={`w-3.5 h-3.5 ${isFavorite(p.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+        </button>
+      </div>
+      <div className="p-3">
+        <h4 className="font-medium text-xs mb-1" style={{ color: "hsl(130,55%,15%)" }}>{p.name}</h4>
+        <p className="font-bold text-sm" style={{ color: "hsl(130,55%,40%)" }}>{p.price} ج.م</p>
+      </div>
+    </motion.div>
+  );
 
   return (
     <div className="min-h-screen" dir="rtl" style={{ backgroundColor: "hsl(80,20%,97%)" }}>
@@ -28,31 +42,42 @@ const SupermarketStore = () => {
         </div>
       </nav>
 
-      <motion.section initial={{ opacity:0 }} animate={{ opacity:1 }} className="relative overflow-hidden" style={{ background:"linear-gradient(135deg, hsl(130,55%,45%), hsl(90,50%,40%))" }}>
+      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, hsl(130,55%,45%), hsl(90,50%,40%))" }}>
         <div className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="text-white">
-            <motion.h2 initial={{ opacity:0,y:30 }} animate={{ opacity:1,y:0 }} transition={{ delay:0.4 }} className="text-5xl lg:text-6xl font-bold mb-6">{heroTitle}</motion.h2>
-            {heroSubtitle && <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.6 }} className="text-white/70 text-lg mb-8">{heroSubtitle}</motion.p>}
-            <Button className="bg-white hover:bg-white/90 rounded-full px-8 py-6 text-sm font-bold" style={{ color:"hsl(130,55%,30%)" }}>{heroButton}</Button>
+            <motion.h2 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-5xl lg:text-6xl font-bold mb-6">{heroTitle}</motion.h2>
+            {heroSubtitle && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="text-white/70 text-lg mb-8">{heroSubtitle}</motion.p>}
+            <Button className="bg-white hover:bg-white/90 rounded-full px-8 py-6 text-sm font-bold" style={{ color: "hsl(130,55%,30%)" }}>{heroButton}</Button>
           </div>
         </div>
       </motion.section>
 
-      {cats.length > 0 && <section className="max-w-7xl mx-auto px-6 py-10"><div className="flex flex-wrap gap-3 justify-center">{cats.map((c,i) => <motion.button key={c} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.05 }} className="px-6 py-3 rounded-full border bg-white text-sm font-medium" style={{ borderColor:"hsl(80,20%,85%)", color:"hsl(130,55%,25%)" }}>{c}</motion.button>)}</div></section>}
+      {groupedProducts.length > 0 ? (
+        groupedProducts.map((group, gi) => (
+          <section key={group.category.id} className="max-w-7xl mx-auto px-6 py-12">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: gi * 0.1 }} className="flex items-center gap-3 mb-8">
+              <h3 className="text-3xl font-bold" style={{ color: "hsl(130,55%,20%)" }}>{group.category.name}</h3>
+              <span className="text-sm text-muted-foreground">({group.products.length})</span>
+            </motion.div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {group.products.map((p, i) => renderProductCard(p, i))}
+            </div>
+          </section>
+        ))
+      ) : products.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">لا توجد منتجات حالياً</div>
+      ) : null}
 
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        <h3 className="text-3xl font-bold mb-10" style={{ color: "hsl(130,55%,20%)" }}>منتجاتنا</h3>
-        {products.length === 0 ? <div className="text-center py-12 text-muted-foreground">لا توجد منتجات حالياً</div> :
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">{products.map((p,i) => <motion.div key={p.id} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.08 }} className="group bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer" style={{ border:"1px solid hsl(80,20%,90%)" }}>
-          <div className="aspect-[4/5] overflow-hidden relative" style={{ backgroundColor:"hsl(80,20%,95%)" }}>{p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center"><ShoppingCart className="w-10 h-10 opacity-20" /></div>}
-            <button onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id, p.organization_id); }} className="absolute top-2 left-2 w-7 h-7 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
-              <Heart className={`w-3.5 h-3.5 ${isFavorite(p.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
-            </button>
+      {uncategorizedProducts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 py-12">
+          <h3 className="text-3xl font-bold mb-8" style={{ color: "hsl(130,55%,20%)" }}>أخرى</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {uncategorizedProducts.map((p, i) => renderProductCard(p, i))}
           </div>
-          <div className="p-3"><h4 className="font-medium text-xs mb-1" style={{ color:"hsl(130,55%,15%)" }}>{p.name}</h4><p className="font-bold text-sm" style={{ color:"hsl(130,55%,40%)" }}>{p.price} ج.م</p></div>
-        </motion.div>)}</div>}
-      </section>
+        </section>
+      )}
     </div>
   );
 };
+
 export default SupermarketStore;

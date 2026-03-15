@@ -8,7 +8,7 @@ import { useParams } from "react-router-dom";
 
 const AccessoriesStore = () => {
   const { orgId } = useParams();
-  const { organization, products, isLoading } = useStoreProducts();
+  const { organization, products, groupedProducts, uncategorizedProducts, isLoading } = useStoreProducts();
   const { settings } = useStoreSettings(orgId);
   const { toggleFavorite, isFavorite } = useFavorites(orgId);
 
@@ -19,7 +19,23 @@ const AccessoriesStore = () => {
   const heroTitle = settings?.hero_title || "فخامة لا تُضاهى";
   const heroSubtitle = settings?.hero_subtitle || "تشكيلة حصرية";
   const heroImage = settings?.hero_image_url || "https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=1600&q=80";
-  const categories = settings?.categories || [];
+
+  const renderProductCard = (product: any, i: number) => (
+    <motion.div key={product.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="group cursor-pointer">
+      <div className="aspect-[4/5] overflow-hidden rounded-sm mb-3 border border-white/10 relative">
+        {product.image_url ? (
+          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-white/5"><ShoppingBag className="w-12 h-12 opacity-20" /></div>
+        )}
+        <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+          <Heart className={`w-4 h-4 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-white/80"}`} />
+        </button>
+      </div>
+      <h4 className="font-medium mb-1 text-sm">{product.name}</h4>
+      <p className="text-sm" style={{ color: "hsl(43, 74%, 49%)" }}>{product.price} ج.م</p>
+    </motion.div>
+  );
 
   return (
     <div className="min-h-screen text-white" dir="rtl" style={{ backgroundColor: "hsl(30, 15%, 6%)", fontFamily: "'Inter', sans-serif" }}>
@@ -42,41 +58,32 @@ const AccessoriesStore = () => {
         </div>
       </motion.section>
 
-      {categories.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 py-10">
-          <div className="flex flex-wrap gap-3 justify-center">
-            {categories.map((cat, i) => (
-              <motion.button key={cat} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="px-6 py-3 rounded-full border border-white/20 text-white/80 hover:bg-white/10 transition-colors text-sm font-medium">{cat}</motion.button>
-            ))}
+      {groupedProducts.length > 0 ? (
+        groupedProducts.map((group, gi) => (
+          <section key={group.category.id} className="max-w-7xl mx-auto px-6 py-12">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: gi * 0.1 }} className="flex items-center gap-3 mb-8">
+              <h3 className="text-3xl font-bold" style={{ fontFamily: "'Cormorant Garamond', serif", color: "hsl(43, 74%, 49%)" }}>{group.category.name}</h3>
+              <span className="text-sm text-white/50">({group.products.length})</span>
+            </motion.div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {group.products.map((p, i) => renderProductCard(p, i))}
+            </div>
+          </section>
+        ))
+      ) : products.length === 0 ? (
+        <section className="max-w-7xl mx-auto px-6 py-16">
+          <div className="text-center py-12 text-white/50">لا توجد منتجات حالياً</div>
+        </section>
+      ) : null}
+
+      {uncategorizedProducts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 py-12">
+          <h3 className="text-3xl font-bold mb-8" style={{ fontFamily: "'Cormorant Garamond', serif", color: "hsl(43, 74%, 49%)" }}>أخرى</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {uncategorizedProducts.map((p, i) => renderProductCard(p, i))}
           </div>
         </section>
       )}
-
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        <h3 className="text-3xl font-bold mb-10" style={{ fontFamily: "'Cormorant Garamond', serif", color: "hsl(43, 74%, 49%)" }}>المنتجات المميزة</h3>
-        {products.length === 0 ? (
-          <div className="text-center py-12 text-white/50">لا توجد منتجات حالياً</div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {products.map((product, i) => (
-              <motion.div key={product.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="group cursor-pointer">
-                <div className="aspect-[4/5] overflow-hidden rounded-sm mb-3 border border-white/10 relative">
-                  {product.image_url ? (
-                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-white/5"><ShoppingBag className="w-12 h-12 opacity-20" /></div>
-                  )}
-                  <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                    <Heart className={`w-4 h-4 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-white/80"}`} />
-                  </button>
-                </div>
-                <h4 className="font-medium mb-1 text-sm">{product.name}</h4>
-                <p className="text-sm" style={{ color: "hsl(43, 74%, 49%)" }}>{product.price} ج.م</p>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 };

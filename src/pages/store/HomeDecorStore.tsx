@@ -8,7 +8,7 @@ import { useParams } from "react-router-dom";
 
 const HomeDecorStore = () => {
   const { orgId } = useParams();
-  const { organization, products, isLoading } = useStoreProducts();
+  const { organization, products, groupedProducts, uncategorizedProducts, isLoading } = useStoreProducts();
   const { settings } = useStoreSettings(orgId);
   const { toggleFavorite, isFavorite } = useFavorites(orgId);
 
@@ -18,7 +18,21 @@ const HomeDecorStore = () => {
   const heroSubtitle = settings?.hero_subtitle || "أثاث، ديكور، إضاءة ومفروشات بأعلى جودة";
   const heroButton = settings?.hero_button_text || "تسوق الآن";
   const heroImage = settings?.hero_image_url || "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1600&q=80";
-  const cats = settings?.categories || [];
+
+  const renderProductCard = (product: any, i: number) => (
+    <motion.div key={product.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm" style={{ border: "1px solid hsl(30,20%,90%)" }}>
+      <div className="aspect-[4/5] overflow-hidden relative">
+        {product.image_url ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ShoppingBag className="w-12 h-12 opacity-30" /></div>}
+        <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
+          <Heart className={`w-4 h-4 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+        </button>
+      </div>
+      <div className="p-3">
+        <h4 className="font-medium mb-1 text-sm" style={{ color: "hsl(30,30%,20%)" }}>{product.name}</h4>
+        <p className="font-bold text-sm" style={{ color: "hsl(30,50%,40%)" }}>{product.price} ج.م</p>
+      </div>
+    </motion.div>
+  );
 
   return (
     <div className="min-h-screen" dir="rtl" style={{ backgroundColor: "hsl(30, 25%, 96%)" }}>
@@ -41,21 +55,34 @@ const HomeDecorStore = () => {
         </div>
       </motion.section>
 
-      {cats.length > 0 && <section className="max-w-7xl mx-auto px-6 py-10"><div className="flex flex-wrap gap-3 justify-center">{cats.map((c,i) => <motion.button key={c} initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.05 }} className="px-6 py-3 rounded-full border bg-white text-sm font-medium" style={{ borderColor:"hsl(30,20%,85%)", color:"hsl(30,30%,30%)" }}>{c}</motion.button>)}</div></section>}
+      {groupedProducts.length > 0 ? (
+        groupedProducts.map((group, gi) => (
+          <section key={group.category.id} className="max-w-7xl mx-auto px-6 py-12">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: gi * 0.1 }} className="flex items-center gap-3 mb-8">
+              <h3 className="text-3xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: "hsl(30,30%,25%)" }}>{group.category.name}</h3>
+              <span className="text-sm text-muted-foreground">({group.products.length})</span>
+            </motion.div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {group.products.map((p, i) => renderProductCard(p, i))}
+            </div>
+          </section>
+        ))
+      ) : products.length === 0 ? (
+        <section className="max-w-7xl mx-auto px-6 py-16">
+          <div className="text-center py-12 text-muted-foreground">لا توجد منتجات حالياً</div>
+        </section>
+      ) : null}
 
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        <h3 className="text-3xl font-bold mb-10" style={{ fontFamily: "'Playfair Display', serif", color: "hsl(30,30%,25%)" }}>منتجاتنا</h3>
-        {products.length === 0 ? <div className="text-center py-12 text-muted-foreground">لا توجد منتجات حالياً</div> :
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">{products.map((p,i) => <motion.div key={p.id} initial={{ opacity:0,y:30 }} animate={{ opacity:1,y:0 }} transition={{ delay:i*0.08 }} className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm" style={{ border:"1px solid hsl(30,20%,90%)" }}>
-          <div className="aspect-[4/5] overflow-hidden relative">{p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ShoppingBag className="w-12 h-12 opacity-30" /></div>}
-            <button onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id, p.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
-              <Heart className={`w-4 h-4 ${isFavorite(p.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
-            </button>
+      {uncategorizedProducts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 py-12">
+          <h3 className="text-3xl font-bold mb-8" style={{ fontFamily: "'Playfair Display', serif", color: "hsl(30,30%,25%)" }}>أخرى</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {uncategorizedProducts.map((p, i) => renderProductCard(p, i))}
           </div>
-          <div className="p-3"><h4 className="font-medium mb-1 text-sm" style={{ color:"hsl(30,30%,20%)" }}>{p.name}</h4><p className="font-bold text-sm" style={{ color:"hsl(30,50%,40%)" }}>{p.price} ج.م</p></div>
-        </motion.div>)}</div>}
-      </section>
+        </section>
+      )}
     </div>
   );
 };
+
 export default HomeDecorStore;
