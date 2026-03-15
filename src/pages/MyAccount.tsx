@@ -112,14 +112,11 @@ const MyAccount = () => {
     if (!newEmail.trim() || !user) return;
     setEmailLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("update-admin-credentials", {
+      const res = await supabase.functions.invoke("update-admin-credentials", {
         body: { new_email: newEmail },
       });
-      if (error) {
-        const body = await error?.context?.json?.() catch {};
-        throw new Error(body?.error || getErrorMessage(error, "حدث خطأ أثناء تحديث البريد"));
-      }
-      if (data?.error) throw new Error(data.error);
+      if (res.error) throw new Error(getErrorMessage(res.error, "حدث خطأ أثناء تحديث البريد"));
+      if (res.data?.error) throw new Error(res.data.error);
       toast.success("تم تحديث البريد الإلكتروني بنجاح!");
       setNewEmail("");
       await refreshUserData();
