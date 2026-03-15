@@ -131,14 +131,11 @@ const MyAccount = () => {
     if (newPassword !== confirmPassword) { toast.error("كلمة المرور غير متطابقة"); return; }
     setPasswordLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("update-admin-credentials", {
+      const res = await supabase.functions.invoke("update-admin-credentials", {
         body: { current_password: currentPassword, new_password: newPassword },
       });
-      if (error) {
-        const body = await error?.context?.json?.() catch {};
-        throw new Error(body?.error || getErrorMessage(error, "حدث خطأ أثناء تغيير كلمة المرور"));
-      }
-      if (data?.error) throw new Error(data.error);
+      if (res.error) throw new Error(getErrorMessage(res.error, "حدث خطأ أثناء تغيير كلمة المرور"));
+      if (res.data?.error) throw new Error(res.data.error);
       toast.success("تم تغيير كلمة المرور بنجاح!");
       setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
     } catch (err: any) {
