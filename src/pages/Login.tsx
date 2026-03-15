@@ -36,7 +36,18 @@ const Login = () => {
     if (signInError) {
       setError(signInError);
     } else {
-      navigate("/dashboard");
+      // Check role to redirect appropriately
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", (await supabase.auth.getUser()).data.user?.id || "")
+        .single();
+
+      if (roleData?.role === "super_admin" || roleData?.role === "admin") {
+        navigate("/dashboard");
+      } else {
+        navigate("/my-account");
+      }
     }
   };
 
