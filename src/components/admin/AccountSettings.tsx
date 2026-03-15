@@ -101,11 +101,11 @@ const AccountSettings = () => {
     }
     setPasswordLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("update-admin-credentials", {
+      const res = await supabase.functions.invoke("update-admin-credentials", {
         body: { current_password: currentPassword, new_password: newPassword },
       });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (res.error) throw new Error(getErrorMessage(res.error, "حدث خطأ أثناء تغيير كلمة المرور"));
+      if (res.data?.error) throw new Error(res.data.error);
       toast.success("تم تغيير كلمة المرور بنجاح!");
       setCurrentPassword("");
       setNewPassword("");
