@@ -56,10 +56,39 @@ Deno.serve(async (req) => {
       .single();
     if (orgError) throw orgError;
 
-    await supabaseAdmin
-      .from("profiles")
-      .update({ organization_id: org.id })
-      .eq("user_id", newUser.user.id);
+    // Wait briefly for the trigger to create the profile, then update
+    let retries = 0;
+    let profileUpdated = false;
+    while (retries < 5 && !profileUpdated) {
+      const { data: existingProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("user_id", newUser.user.id)
+        .single();
+      
+      if (existingProfile) {
+        await supabaseAdmin
+          .from("profiles")
+          .update({ organization_id: org.id })
+          .eq("user_id", newUser.user.id);
+        profileUpdated = true;
+      } else {
+        retries++;
+        await new Promise(r => setTimeout(r, 300));
+      }
+    }
+    
+    if (!profileUpdated) {
+      // Fallback: insert profile directly
+      await supabaseAdmin
+        .from("profiles")
+        .upsert({
+          user_id: newUser.user.id,
+          display_name: store_name,
+          email,
+          organization_id: org.id,
+        }, { onConflict: "user_id" });
+    }
 
     await supabaseAdmin
       .from("user_roles")

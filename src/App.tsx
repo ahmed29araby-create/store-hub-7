@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import SetupPage from "./pages/Setup";
 import CustomerRegister from "./pages/CustomerRegister";
+import MyAccount from "./pages/MyAccount";
 import ClothingStore from "./pages/store/ClothingStore";
 import AccessoriesStore from "./pages/store/AccessoriesStore";
 import RestaurantStore from "./pages/store/RestaurantStore";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/setup" element={<SetupPage />} />
             <Route path="/customer-register" element={<CustomerRegister />} />
+            <Route path="/my-account" element={<MyAccount />} />
             <Route path="/store/clothing/:orgId" element={<ClothingStore />} />
             <Route path="/store/accessories/:orgId" element={<AccessoriesStore />} />
             <Route path="/store/restaurant/:orgId" element={<RestaurantStore />} />
