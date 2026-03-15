@@ -5,6 +5,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const defaultCategories: Record<string, string[]> = {
+  clothing: ["ملابس رجالي", "ملابس حريمي", "أطفال", "أحذية", "إكسسوارات"],
+  accessories: ["ساعات", "عطور", "نظارات", "مجوهرات", "محافظ"],
+  restaurant: ["مشاوي", "مقبلات", "مشروبات", "حلويات", "سلطات"],
+  pharmacy: ["أدوية", "فيتامينات", "عناية شخصية", "مستحضرات تجميل", "أجهزة طبية"],
+  electronics: ["هواتف", "لابتوب", "سماعات", "ألعاب", "إكسسوارات"],
+  sports: ["ملابس رياضية", "أحذية رياضية", "معدات", "مكملات غذائية"],
+  gifts: ["هدايا", "ورد", "شوكولاتة", "تغليف هدايا"],
+  home_decor: ["أثاث", "إضاءة", "ديكور", "مفروشات"],
+  supermarket: ["خضار وفاكهة", "لحوم", "مشروبات", "منظفات", "حلويات"],
+  kids_toys: ["ألعاب تعليمية", "ألعاب أطفال", "ملابس أطفال", "مستلزمات رضع"],
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -28,7 +41,6 @@ Deno.serve(async (req) => {
       throw new Error("نوع المتجر غير صالح");
     }
 
-    // Try to create the user directly - Supabase will return error if email exists
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -56,6 +68,18 @@ Deno.serve(async (req) => {
       .single();
     if (orgError) throw orgError;
 
+    // Seed default categories for this store type
+    const cats = defaultCategories[store_type] || [];
+    if (cats.length > 0) {
+      const categoryRows = cats.map((name, i) => ({
+        name,
+        organization_id: org.id,
+        sort_order: i,
+        is_visible: true,
+      }));
+      await supabaseAdmin.from("categories").insert(categoryRows);
+    }
+
     // Wait briefly for the trigger to create the profile, then update
     let retries = 0;
     let profileUpdated = false;
@@ -79,7 +103,6 @@ Deno.serve(async (req) => {
     }
     
     if (!profileUpdated) {
-      // Fallback: insert profile directly
       await supabaseAdmin
         .from("profiles")
         .upsert({
