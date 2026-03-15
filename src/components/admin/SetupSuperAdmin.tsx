@@ -15,7 +15,7 @@ const SetupSuperAdmin = () => {
   const [loading, setLoading] = useState(false);
 
   const handleSetup = async () => {
-    if (!email || password.length < 12) return;
+    if (!email || password.length < 8) return;
     setLoading(true);
     try {
       const res = await supabase.functions.invoke("setup-super-admin", {
