@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
       .limit(1);
 
     if (existingAdmin && existingAdmin.length > 0) {
-      throw new Error("Super admin already exists");
+      throw new Error("حساب مسؤول المنصة موجود بالفعل. سجل دخول من صفحة تسجيل الدخول.");
     }
 
     // Create auth user
