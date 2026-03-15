@@ -1,100 +1,183 @@
 import { motion } from "framer-motion";
-import { ShoppingBag, Pill, Search, Heart } from "lucide-react";
+import { ShoppingBag, Heart, Pill, Search, Shield, Truck, MessageCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStoreProducts } from "@/hooks/useStoreProducts";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { useFavorites } from "@/hooks/useFavorites";
-import { useParams } from "react-router-dom";
+
+const scrollToSection = (cat: string) => {
+  const el = document.getElementById(`pharm-cat-${cat}`);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+};
 
 const PharmacyStore = () => {
-  const { orgId } = useParams();
-  const { organization, products, groupedProducts, uncategorizedProducts, isLoading } = useStoreProducts();
+  const { organization, products, categories, groupedProducts, uncategorizedProducts, isLoading, orgId } = useStoreProducts();
   const { settings } = useStoreSettings(orgId);
   const { toggleFavorite, isFavorite } = useFavorites(orgId);
 
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">جاري التحميل...</div>;
-  }
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "hsl(160, 30%, 97%)" }}>جاري التحميل...</div>;
 
-  const heroTitle = settings?.hero_title || "كل ما تحتاجه لصحتك";
+  const heroTitle = settings?.hero_title || "صحتك أولويتنا";
   const heroSubtitle = settings?.hero_subtitle || "أدوية، فيتامينات، مستحضرات تجميل وأجهزة طبية بأفضل الأسعار";
   const heroButton = settings?.hero_button_text || "تسوق الآن";
-  const heroImage = settings?.hero_image_url || "https://images.unsplash.com/photo-1585435557343-3b092031a831?w=1600&q=80";
-
-  const renderProductCard = (product: any, i: number) => (
-    <motion.div key={product.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="group cursor-pointer bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="aspect-[4/5] overflow-hidden bg-secondary relative">
-        {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Pill className="w-12 h-12 opacity-30" /></div>
-        )}
-        <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-sm">
-          <Heart className={`w-4 h-4 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
-        </button>
-      </div>
-      <div className="p-3">
-        <h4 className="font-medium text-foreground mb-1 text-sm">{product.name}</h4>
-        <p className="text-primary font-bold text-sm">{product.price} ج.م</p>
-      </div>
-    </motion.div>
-  );
+  const heroImage = settings?.hero_image_url || "https://images.unsplash.com/photo-1585435557343-3b092031a831?w=800&q=80";
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
+    <div className="min-h-screen" dir="rtl" style={{ backgroundColor: "hsl(160, 30%, 97%)", fontFamily: "'Inter', sans-serif" }}>
+      {/* Nav */}
+      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b" style={{ borderColor: "hsl(160,40%,90%)" }}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Pill className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">{organization?.name || "صيدليتي"}</h1>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: "hsl(160, 50%, 40%)" }}>
+              <Pill className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="text-xl font-bold" style={{ color: "hsl(160, 50%, 25%)" }}>{organization?.name || "صيدليتي"}</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon"><Search className="w-5 h-5" /></Button>
-            <Button variant="ghost" size="icon"><ShoppingBag className="w-5 h-5" /></Button>
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center bg-white border rounded-full px-4 py-2 gap-2" style={{ borderColor: "hsl(160,40%,85%)" }}>
+              <Search className="w-4 h-4 text-gray-400" />
+              <input placeholder="ابحث عن منتج..." className="text-sm bg-transparent outline-none w-40" />
+            </div>
+            <Button variant="ghost" size="icon" className="relative" style={{ color: "hsl(160,50%,30%)" }}>
+              <ShoppingBag className="w-5 h-5" />
+            </Button>
           </div>
         </div>
       </nav>
 
-      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} className="relative h-[60vh] overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
-        <div className="absolute inset-0 bg-gradient-to-l from-emerald-900/80 to-emerald-800/40" />
-        <div className="relative z-10 h-full flex items-center max-w-7xl mx-auto px-6">
-          <div className="text-white max-w-lg">
-            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="text-5xl md:text-6xl font-bold mb-4">{heroTitle}</motion.h2>
-            {heroSubtitle && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="text-white/80 text-lg mb-6">{heroSubtitle}</motion.p>}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
-              <Button className="bg-white text-emerald-900 hover:bg-white/90 rounded-full px-8 py-6 text-sm tracking-wider font-semibold">{heroButton}</Button>
+      {/* Hero - Clean Medical */}
+      <section className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, hsl(160,50%,40%) 0%, hsl(170,45%,30%) 100%)" }}>
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute w-96 h-96 rounded-full -top-20 -left-20 bg-white" />
+          <div className="absolute w-64 h-64 rounded-full bottom-10 right-10 bg-white" />
+        </div>
+        <div className="max-w-7xl mx-auto px-6 py-20 lg:py-28 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+          <div className="text-white">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: "hsla(0,0%,100%,0.15)" }}>
+              <Shield className="w-3.5 h-3.5" /> منتجات معتمدة ومرخصة
+            </motion.div>
+            <motion.h2 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+              className="text-4xl lg:text-6xl font-bold mb-6 leading-tight">{heroTitle}</motion.h2>
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+              className="text-white/70 text-lg mb-8 max-w-md">{heroSubtitle}</motion.p>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
+              <Button className="bg-white hover:bg-white/90 rounded-full px-8 py-6 text-sm font-semibold" style={{ color: "hsl(160,50%,30%)" }}>
+                {heroButton} <ArrowLeft className="w-4 h-4 mr-2" />
+              </Button>
             </motion.div>
           </div>
+          <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5, duration: 0.8 }} className="hidden lg:block">
+            <img src={heroImage} alt="" className="w-full h-80 object-cover rounded-3xl shadow-2xl" />
+          </motion.div>
         </div>
-      </motion.section>
+      </section>
 
+      {/* Category Pills */}
+      {categories.length > 0 && (
+        <div className="sticky top-[69px] z-30 bg-white/95 backdrop-blur-xl shadow-sm">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex gap-3 overflow-x-auto">
+            {categories.map((cat) => (
+              <button key={cat.id} onClick={() => scrollToSection(cat.name)}
+                className="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border"
+                style={{ borderColor: "hsl(160,40%,85%)", color: "hsl(160,50%,30%)" }}>{cat.name}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Products by Category */}
       {groupedProducts.length > 0 ? (
-        groupedProducts.map((group, gi) => (
-          <section key={group.category.id} className="max-w-7xl mx-auto px-6 py-12">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: gi * 0.1 }} className="flex items-center gap-3 mb-8">
-              <h3 className="text-3xl font-bold">{group.category.name}</h3>
-              <span className="text-sm text-muted-foreground">({group.products.length})</span>
-            </motion.div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {group.products.map((p, i) => renderProductCard(p, i))}
+        groupedProducts.map((group) => (
+          <section key={group.category.id} id={`pharm-cat-${group.category.name}`} className="max-w-7xl mx-auto px-6 py-12 scroll-mt-36">
+            <motion.h3 initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              className="text-xl font-bold mb-6 flex items-center gap-3" style={{ color: "hsl(160,50%,25%)" }}>
+              <div className="w-1 h-6 rounded-full" style={{ backgroundColor: "hsl(160,50%,40%)" }} />
+              {group.category.name}
+            </motion.h3>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {group.products.map((product, i) => (
+                <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className="group bg-white rounded-2xl border overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  style={{ borderColor: "hsl(160,40%,92%)" }}>
+                  <div className="aspect-square overflow-hidden relative" style={{ backgroundColor: "hsl(160,30%,95%)" }}>
+                    {product.image_url ? (
+                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"><Pill className="w-10 h-10 opacity-20" /></div>
+                    )}
+                    <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }}
+                      className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                      <Heart className={`w-3.5 h-3.5 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : ""}`} style={{ color: isFavorite(product.id) ? undefined : "hsl(160,50%,40%)" }} />
+                    </button>
+                  </div>
+                  <div className="p-3">
+                    <h4 className="font-medium text-sm mb-2" style={{ color: "hsl(160,50%,15%)" }}>{product.name}</h4>
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-sm" style={{ color: "hsl(160,50%,40%)" }}>{product.price} ج.م</p>
+                      <Button size="sm" className="rounded-full text-[10px] h-7 px-3 text-white" style={{ backgroundColor: "hsl(160,50%,40%)" }}>أضف</Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </section>
         ))
       ) : products.length === 0 ? (
-        <section className="max-w-7xl mx-auto px-6 py-16">
-          <div className="text-center py-12 text-muted-foreground">لا توجد منتجات حالياً</div>
-        </section>
+        <div className="text-center py-20" style={{ color: "hsl(160,30%,50%)" }}>لا توجد منتجات حالياً</div>
       ) : null}
 
       {uncategorizedProducts.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 py-12">
-          <h3 className="text-3xl font-bold mb-8">أخرى</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {uncategorizedProducts.map((p, i) => renderProductCard(p, i))}
+          <h3 className="text-xl font-bold mb-6 flex items-center gap-3" style={{ color: "hsl(160,50%,25%)" }}>
+            <div className="w-1 h-6 rounded-full" style={{ backgroundColor: "hsl(160,50%,40%)" }} />أخرى
+          </h3>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {uncategorizedProducts.map((product, i) => (
+              <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                className="group bg-white rounded-2xl border overflow-hidden hover:shadow-lg transition-all cursor-pointer" style={{ borderColor: "hsl(160,40%,92%)" }}>
+                <div className="aspect-square overflow-hidden relative" style={{ backgroundColor: "hsl(160,30%,95%)" }}>
+                  {product.image_url ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center"><Pill className="w-10 h-10 opacity-20" /></div>}
+                  <button onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id, product.organization_id); }} className="absolute top-2 left-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                    <Heart className={`w-3.5 h-3.5 ${isFavorite(product.id) ? "fill-red-500 text-red-500" : ""}`} style={{ color: isFavorite(product.id) ? undefined : "hsl(160,50%,40%)" }} />
+                  </button>
+                </div>
+                <div className="p-3">
+                  <h4 className="font-medium text-sm mb-2" style={{ color: "hsl(160,50%,15%)" }}>{product.name}</h4>
+                  <p className="font-bold text-sm" style={{ color: "hsl(160,50%,40%)" }}>{product.price} ج.م</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </section>
       )}
+
+      {/* Trust Section */}
+      <section className="py-16" style={{ backgroundColor: "hsl(160,30%,95%)" }}>
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { icon: Truck, title: "توصيل سريع", desc: "توصيل خلال ساعتين لمنطقتك" },
+            { icon: Shield, title: "منتجات أصلية", desc: "جميع المنتجات معتمدة ومرخصة" },
+            { icon: MessageCircle, title: "استشارة مجانية", desc: "صيدلي متاح للرد على استفساراتك" },
+          ].map((f, i) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
+              className="flex items-start gap-4 p-6 bg-white rounded-2xl" style={{ border: "1px solid hsl(160,40%,90%)" }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "hsl(160,50%,92%)" }}>
+                <f.icon className="w-6 h-6" style={{ color: "hsl(160,50%,40%)" }} />
+              </div>
+              <div>
+                <h4 className="font-bold mb-1" style={{ color: "hsl(160,50%,20%)" }}>{f.title}</h4>
+                <p className="text-sm text-gray-500">{f.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      <footer className="border-t py-8 text-center text-xs text-gray-400" style={{ borderColor: "hsl(160,40%,90%)" }}>
+        <p>© 2026 {organization?.name || "StoreHub"} - جميع الحقوق محفوظة</p>
+      </footer>
     </div>
   );
 };
