@@ -64,8 +64,8 @@ const SetupSuperAdmin = () => {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            {password.length > 0 && password.length < 12 && (
-              <p className="text-xs text-destructive">كلمة المرور يجب أن تكون 12 حرف على الأقل</p>
+            {password.length > 0 && password.length < 8 && (
+              <p className="text-xs text-destructive">كلمة المرور يجب أن تكون 8 أحرف على الأقل</p>
             )}
           </div>
           <Button className="w-full" onClick={handleSetup} disabled={!email || password.length < 12 || loading}>
