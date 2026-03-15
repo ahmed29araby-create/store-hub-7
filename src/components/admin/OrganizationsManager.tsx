@@ -191,6 +191,13 @@ const OrganizationsManager = () => {
                     <SelectItem value="clothing">ملابس</SelectItem>
                     <SelectItem value="accessories">إكسسوارات</SelectItem>
                     <SelectItem value="restaurant">مطاعم</SelectItem>
+                    <SelectItem value="pharmacy">صيدليات</SelectItem>
+                    <SelectItem value="electronics">إلكترونيات</SelectItem>
+                    <SelectItem value="sports">رياضة</SelectItem>
+                    <SelectItem value="gifts">هدايا</SelectItem>
+                    <SelectItem value="home_decor">منزل وديكور</SelectItem>
+                    <SelectItem value="supermarket">سوبرماركت</SelectItem>
+                    <SelectItem value="kids_toys">أطفال وألعاب</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
