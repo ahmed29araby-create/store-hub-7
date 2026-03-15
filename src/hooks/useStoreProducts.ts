@@ -13,6 +13,13 @@ export interface StoreProduct {
   organization_id: string;
 }
 
+export interface StoreCategory {
+  id: string;
+  name: string;
+  is_visible: boolean;
+  sort_order: number;
+}
+
 export const useStoreProducts = () => {
   const { orgId } = useParams<{ orgId: string }>();
 
@@ -32,7 +39,7 @@ export const useStoreProducts = () => {
     enabled: !!orgId,
   });
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ["store-products", orgId],
     queryFn: async () => {
       if (!orgId) return [];
@@ -48,5 +55,42 @@ export const useStoreProducts = () => {
     enabled: !!orgId,
   });
 
-  return { organization, products, isLoading, orgId };
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ["store-categories", orgId],
+    queryFn: async () => {
+      if (!orgId) return [];
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("organization_id", orgId)
+        .eq("is_visible", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data as StoreCategory[];
+    },
+    enabled: !!orgId,
+  });
+
+  // Group products by category
+  const groupedProducts: { category: StoreCategory; products: StoreProduct[] }[] = categories
+    .map((cat) => ({
+      category: cat,
+      products: products.filter((p) => p.category === cat.id),
+    }))
+    .filter((group) => group.products.length > 0);
+
+  // Products without a category
+  const uncategorizedProducts = products.filter(
+    (p) => !p.category || !categories.find((c) => c.id === p.category)
+  );
+
+  return {
+    organization,
+    products,
+    categories,
+    groupedProducts,
+    uncategorizedProducts,
+    isLoading: productsLoading || categoriesLoading,
+    orgId,
+  };
 };
