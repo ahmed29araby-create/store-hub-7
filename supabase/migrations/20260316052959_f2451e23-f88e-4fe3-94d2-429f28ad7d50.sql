@@ -1,0 +1,1 @@
+ALTER TYPE public.store_type ADD VALUE IF NOT EXISTS 'real_estate';

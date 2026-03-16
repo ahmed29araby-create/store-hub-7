@@ -21,6 +21,7 @@ const storeTypeLabels: Record<string, string> = {
   home_decor: "المنزل والديكور",
   supermarket: "سوبرماركت",
   kids_toys: "أطفال وألعاب",
+  real_estate: "عقارات",
 };
 
 const Register = () => {
@@ -142,6 +143,7 @@ const Register = () => {
                   <SelectItem value="home_decor">المنزل والديكور</SelectItem>
                   <SelectItem value="supermarket">سوبرماركت</SelectItem>
                   <SelectItem value="kids_toys">أطفال وألعاب</SelectItem>
+                  <SelectItem value="real_estate">عقارات</SelectItem>
                 </SelectContent>
               </Select>
             </div>

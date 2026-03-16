@@ -32,6 +32,8 @@ import DemoGiftsStore from "./pages/demo/DemoGiftsStore";
 import DemoHomeDecorStore from "./pages/demo/DemoHomeDecorStore";
 import DemoSupermarketStore from "./pages/demo/DemoSupermarketStore";
 import DemoKidsToysStore from "./pages/demo/DemoKidsToysStore";
+import RealEstateStore from "./pages/store/RealEstateStore";
+import DemoRealEstateStore from "./pages/demo/DemoRealEstateStore";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +62,7 @@ const App = () => (
             <Route path="/store/home_decor/:orgId" element={<HomeDecorStore />} />
             <Route path="/store/supermarket/:orgId" element={<SupermarketStore />} />
             <Route path="/store/kids_toys/:orgId" element={<KidsToysStore />} />
+            <Route path="/store/real_estate/:orgId" element={<RealEstateStore />} />
             <Route path="/demo/clothing" element={<DemoClothingStore />} />
             <Route path="/demo/accessories" element={<DemoAccessoriesStore />} />
             <Route path="/demo/restaurant" element={<DemoRestaurantStore />} />
@@ -70,6 +73,7 @@ const App = () => (
             <Route path="/demo/home-decor" element={<DemoHomeDecorStore />} />
             <Route path="/demo/supermarket" element={<DemoSupermarketStore />} />
             <Route path="/demo/kids-toys" element={<DemoKidsToysStore />} />
+            <Route path="/demo/real-estate" element={<DemoRealEstateStore />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

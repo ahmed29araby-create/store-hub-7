@@ -16,6 +16,7 @@ const defaultCategories: Record<string, string[]> = {
   home_decor: ["أثاث", "إضاءة", "ديكور", "مفروشات"],
   supermarket: ["خضار وفاكهة", "لحوم", "مشروبات", "منظفات", "حلويات"],
   kids_toys: ["ألعاب تعليمية", "ألعاب أطفال", "ملابس أطفال", "مستلزمات رضع"],
+  real_estate: ["شقق", "فلل", "أراضي", "محلات تجارية", "مكاتب إدارية"],
 };
 
 Deno.serve(async (req) => {
@@ -37,7 +38,7 @@ Deno.serve(async (req) => {
     if (password.length < 12) {
       throw new Error("كلمة المرور يجب أن تكون 12 حرف على الأقل");
     }
-    if (!["clothing", "accessories", "restaurant", "pharmacy", "electronics", "sports", "gifts", "home_decor", "supermarket", "kids_toys"].includes(store_type)) {
+    if (!["clothing", "accessories", "restaurant", "pharmacy", "electronics", "sports", "gifts", "home_decor", "supermarket", "kids_toys", "real_estate"].includes(store_type)) {
       throw new Error("نوع المتجر غير صالح");
     }
 
