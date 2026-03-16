@@ -32,6 +32,8 @@ import DemoGiftsStore from "./pages/demo/DemoGiftsStore";
 import DemoHomeDecorStore from "./pages/demo/DemoHomeDecorStore";
 import DemoSupermarketStore from "./pages/demo/DemoSupermarketStore";
 import DemoKidsToysStore from "./pages/demo/DemoKidsToysStore";
+import RealEstateStore from "./pages/store/RealEstateStore";
+import DemoRealEstateStore from "./pages/demo/DemoRealEstateStore";
 
 const queryClient = new QueryClient();
 
