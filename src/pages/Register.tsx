@@ -21,6 +21,7 @@ const storeTypeLabels: Record<string, string> = {
   home_decor: "المنزل والديكور",
   supermarket: "سوبرماركت",
   kids_toys: "أطفال وألعاب",
+  real_estate: "عقارات",
 };
 
 const Register = () => {
