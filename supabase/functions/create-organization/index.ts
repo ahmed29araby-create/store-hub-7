@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
       throw new Error("Password must be at least 12 characters");
     }
 
-    const validTypes = ["clothing", "accessories", "restaurant", "pharmacy", "electronics", "sports", "gifts", "home_decor", "supermarket", "kids_toys"];
+    const validTypes = ["clothing", "accessories", "restaurant", "pharmacy", "electronics", "sports", "gifts", "home_decor", "supermarket", "kids_toys", "real_estate"];
     if (!validTypes.includes(store_type)) {
       throw new Error("نوع المتجر غير صالح");
     }

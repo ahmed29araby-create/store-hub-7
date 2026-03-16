@@ -143,6 +143,7 @@ const Register = () => {
                   <SelectItem value="home_decor">المنزل والديكور</SelectItem>
                   <SelectItem value="supermarket">سوبرماركت</SelectItem>
                   <SelectItem value="kids_toys">أطفال وألعاب</SelectItem>
+                  <SelectItem value="real_estate">عقارات</SelectItem>
                 </SelectContent>
               </Select>
             </div>

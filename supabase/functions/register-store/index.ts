@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     if (password.length < 12) {
       throw new Error("كلمة المرور يجب أن تكون 12 حرف على الأقل");
     }
-    if (!["clothing", "accessories", "restaurant", "pharmacy", "electronics", "sports", "gifts", "home_decor", "supermarket", "kids_toys"].includes(store_type)) {
+    if (!["clothing", "accessories", "restaurant", "pharmacy", "electronics", "sports", "gifts", "home_decor", "supermarket", "kids_toys", "real_estate"].includes(store_type)) {
       throw new Error("نوع المتجر غير صالح");
     }
 

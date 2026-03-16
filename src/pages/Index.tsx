@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Shirt, Watch, UtensilsCrossed, Pill, Cpu, Dumbbell, Gift, LogIn, Store, Sofa, ShoppingCart, Baby, UserPlus } from "lucide-react";
+import { Shirt, Watch, UtensilsCrossed, Pill, Cpu, Dumbbell, Gift, LogIn, Store, Sofa, ShoppingCart, Baby, UserPlus, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const storeTypes = [
