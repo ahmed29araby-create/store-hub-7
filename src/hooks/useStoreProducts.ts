@@ -79,6 +79,11 @@ export const useStoreProducts = () => {
     }))
     .filter((group) => group.products.length > 0);
 
+  // Only return categories that have products (hide empty ones from store)
+  const visibleCategories = categories.filter(
+    (cat) => products.some((p) => p.category === cat.id)
+  );
+
   // Products without a category
   const uncategorizedProducts = products.filter(
     (p) => !p.category || !categories.find((c) => c.id === p.category)
