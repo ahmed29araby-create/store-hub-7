@@ -104,6 +104,16 @@ const storeTypes = [
     gradient: "from-[hsl(280,50%,30%)] to-[hsl(200,60%,50%)]",
     image: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800&q=80",
   },
+  {
+    id: "real_estate",
+    title: "عقارات",
+    subtitle: "Real Estate",
+    description: "شقق، فلل، أراضي، محلات تجارية وعقارات استثمارية",
+    icon: Building,
+    path: "/demo/real-estate",
+    gradient: "from-[hsl(220,60%,25%)] to-[hsl(220,50%,45%)]",
+    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80",
+  },
 ];
 
 const Index = () => {
