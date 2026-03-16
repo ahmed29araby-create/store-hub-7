@@ -169,11 +169,6 @@ const CompanySettings = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>الاسم الحالي</Label>
-            <p className="text-sm font-medium text-muted-foreground">{profile?.display_name}</p>
-          </div>
-          <div className="space-y-2">
-            <Label>الاسم الجديد</Label>
             <Input
               type="text"
               value={newName}

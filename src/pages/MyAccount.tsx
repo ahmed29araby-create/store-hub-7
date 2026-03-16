@@ -150,10 +150,10 @@ const MyAccount = () => {
     setAvatarLoading(true);
     try {
       const ext = file.name.split(".").pop();
-      const path = `avatars/${user.id}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
       await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", user.id);
       toast.success("تم تحديث الصورة بنجاح");
       await refreshUserData();
