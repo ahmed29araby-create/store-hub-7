@@ -144,7 +144,6 @@ const AccountSettings = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>الاسم الجديد</Label>
             <Input
               type="text"
               value={newName}

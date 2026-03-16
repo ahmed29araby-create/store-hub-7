@@ -180,7 +180,7 @@ const CompanyProductsManager = () => {
     mutationFn: async (product: any) => {
       if (!organization) throw new Error("No org");
       const { error } = await supabase.from("products").insert({
-        name: `${product.name} (نسخة)`,
+        name: product.name,
         description: product.description,
         price: product.price,
         image_url: product.image_url,

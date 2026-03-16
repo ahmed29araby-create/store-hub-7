@@ -224,6 +224,7 @@ export type Database = {
           is_active: boolean
           name: string
           store_type: Database["public"]["Enums"]["store_type"]
+          subscription_price: number | null
           trial_end_date: string | null
           trial_months: number | null
           updated_at: string
@@ -236,6 +237,7 @@ export type Database = {
           is_active?: boolean
           name: string
           store_type: Database["public"]["Enums"]["store_type"]
+          subscription_price?: number | null
           trial_end_date?: string | null
           trial_months?: number | null
           updated_at?: string
@@ -248,6 +250,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           store_type?: Database["public"]["Enums"]["store_type"]
+          subscription_price?: number | null
           trial_end_date?: string | null
           trial_months?: number | null
           updated_at?: string

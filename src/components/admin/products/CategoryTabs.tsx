@@ -101,7 +101,14 @@ const CategoryTabs = ({
             <Pencil className="w-4 h-4 ml-2" />
             تعديل الاسم
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onToggleVisibility(cat.id, !cat.is_visible)}>
+          <DropdownMenuItem onClick={() => {
+            const count = productCounts[cat.id] || 0;
+            if (!cat.is_visible && count === 0) {
+              toast.error("يجب إضافة منتجات داخل القسم قبل إظهاره");
+              return;
+            }
+            onToggleVisibility(cat.id, !cat.is_visible);
+          }}>
             {cat.is_visible ? (
               <>
                 <EyeOff className="w-4 h-4 ml-2" />
