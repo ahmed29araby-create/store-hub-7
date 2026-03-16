@@ -92,7 +92,7 @@ export const useStoreProducts = () => {
   return {
     organization,
     products,
-    categories,
+    categories: visibleCategories,
     groupedProducts,
     uncategorizedProducts,
     isLoading: productsLoading || categoriesLoading,
