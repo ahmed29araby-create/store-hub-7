@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Package, ShoppingCart, LayoutDashboard, Settings, LogOut, ExternalLink, Palette } from "lucide-react";
+import { Package, ShoppingCart, LayoutDashboard, Settings, LogOut, ExternalLink, Palette, CreditCard } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
