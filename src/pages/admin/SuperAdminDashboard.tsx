@@ -6,6 +6,8 @@ import DashboardOverview from "@/components/admin/DashboardOverview";
 import OrganizationsManager from "@/components/admin/OrganizationsManager";
 import AccountSettings from "@/components/admin/AccountSettings";
 import PendingRegistrations from "@/components/admin/PendingRegistrations";
+import SubscriptionsManager from "@/components/admin/SubscriptionsManager";
+import NotificationsManager from "@/components/admin/NotificationsManager";
 
 const SuperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -22,14 +24,18 @@ const SuperAdminDashboard = () => {
               {activeTab === "overview" && "لوحة التحكم"}
               {activeTab === "pending" && "طلبات التسجيل"}
               {activeTab === "organizations" && "إدارة الشركات"}
+              {activeTab === "subscriptions" && "الاشتراكات"}
               {activeTab === "account" && "إعدادات الحساب"}
+              {activeTab === "notifications" && "الإشعارات"}
             </h1>
           </header>
           <main className="flex-1 p-6 overflow-auto" dir="rtl">
             {activeTab === "overview" && <DashboardOverview />}
             {activeTab === "pending" && <PendingRegistrations />}
             {activeTab === "organizations" && <OrganizationsManager />}
+            {activeTab === "subscriptions" && <SubscriptionsManager />}
             {activeTab === "account" && <AccountSettings />}
+            {activeTab === "notifications" && <NotificationsManager />}
           </main>
         </div>
       </div>

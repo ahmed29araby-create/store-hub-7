@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Package, ShoppingCart, LayoutDashboard, Settings, LogOut, ExternalLink, Palette } from "lucide-react";
+import { Package, ShoppingCart, LayoutDashboard, Settings, LogOut, ExternalLink, Palette, CreditCard } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
@@ -14,6 +14,7 @@ const menuItems = [
   { id: "products", title: "المنتجات", icon: Package },
   { id: "orders", title: "الطلبات", icon: ShoppingCart },
   { id: "appearance", title: "تخصيص الواجهة", icon: Palette },
+  { id: "subscription", title: "الاشتراكات", icon: CreditCard },
   { id: "settings", title: "الإعدادات", icon: Settings },
 ];
 
