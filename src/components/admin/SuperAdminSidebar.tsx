@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, Building2, LayoutDashboard, Settings, LogOut, Bell } from "lucide-react";
+import { BarChart3, Building2, LayoutDashboard, Settings, LogOut, Bell, CreditCard, BellRing } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
