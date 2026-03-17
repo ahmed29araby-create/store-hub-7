@@ -7,6 +7,7 @@ import CompanyOrdersManager from "@/components/admin/CompanyOrdersManager";
 import CompanySettings from "@/components/admin/CompanySettings";
 import DashboardOverview from "@/components/admin/DashboardOverview";
 import StoreAppearanceEditor from "@/components/admin/StoreAppearanceEditor";
+import CompanySubscription from "@/components/admin/CompanySubscription";
 
 const CompanyAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -32,6 +33,7 @@ const CompanyAdminDashboard = () => {
               {activeTab === "products" && "إدارة المنتجات"}
               {activeTab === "orders" && "إدارة الطلبات"}
               {activeTab === "appearance" && "تخصيص واجهة المتجر"}
+              {activeTab === "subscription" && "الاشتراكات"}
               {activeTab === "settings" && "الإعدادات"}
             </h1>
           </header>
@@ -40,6 +42,7 @@ const CompanyAdminDashboard = () => {
             {activeTab === "products" && <CompanyProductsManager />}
             {activeTab === "orders" && <CompanyOrdersManager />}
             {activeTab === "appearance" && <StoreAppearanceEditor />}
+            {activeTab === "subscription" && <CompanySubscription />}
             {activeTab === "settings" && <CompanySettings />}
           </main>
         </div>

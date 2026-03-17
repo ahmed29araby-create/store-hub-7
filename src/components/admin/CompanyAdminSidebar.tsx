@@ -14,6 +14,7 @@ const menuItems = [
   { id: "products", title: "المنتجات", icon: Package },
   { id: "orders", title: "الطلبات", icon: ShoppingCart },
   { id: "appearance", title: "تخصيص الواجهة", icon: Palette },
+  { id: "subscription", title: "الاشتراكات", icon: CreditCard },
   { id: "settings", title: "الإعدادات", icon: Settings },
 ];
 

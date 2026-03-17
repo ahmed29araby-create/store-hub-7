@@ -13,7 +13,9 @@ const menuItems = [
   { id: "overview", title: "نظرة عامة", icon: LayoutDashboard },
   { id: "pending", title: "طلبات التسجيل", icon: Bell },
   { id: "organizations", title: "إدارة الشركات", icon: Building2 },
+  { id: "subscriptions", title: "الاشتراكات", icon: CreditCard },
   { id: "account", title: "إعدادات الحساب", icon: Settings },
+  { id: "notifications", title: "الإشعارات", icon: BellRing },
 ];
 
 interface Props {
