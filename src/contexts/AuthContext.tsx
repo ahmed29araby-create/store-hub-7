@@ -6,7 +6,13 @@ interface AuthContextType {
   user: User | null;
   role: "super_admin" | "admin" | null;
   profile: { display_name: string; email: string; organization_id: string | null } | null;
-  organization: { id: string; name: string; store_type: string; is_active: boolean; approval_status?: string; trial_end_date?: string | null } | null;
+  organization: {
+    id: string; name: string; store_type: string; is_active: boolean;
+    approval_status?: string; trial_end_date?: string | null;
+    subscription_status?: string; subscription_end_date?: string | null;
+    subscription_start_date?: string | null; subscription_package_id?: string | null;
+    subscription_price?: number | null;
+  } | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -31,7 +37,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [lockUntil, setLockUntil] = useState<number | null>(null);
 
   const fetchUserData = async (userId: string) => {
-    // Use maybeSingle to avoid 406 errors when no row exists
     const [{ data: roleData }, { data: profileData }] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
       supabase.from("profiles").select("display_name, email, organization_id").eq("user_id", userId).maybeSingle(),
@@ -45,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (profileData.organization_id) {
         const { data: orgData } = await supabase
           .from("organizations")
-          .select("id, name, store_type, is_active, approval_status, trial_end_date")
+          .select("id, name, store_type, is_active, approval_status, trial_end_date, subscription_status, subscription_end_date, subscription_start_date, subscription_package_id, subscription_price")
           .eq("id", profileData.organization_id)
           .single();
         if (orgData) setOrganization(orgData as any);
@@ -62,7 +67,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!mounted) return;
       if (session?.user) {
         setUser(session.user);
-        // Don't await inside onAuthStateChange to avoid deadlocks
         fetchUserData(session.user.id).finally(() => {
           if (mounted) setLoading(false);
         });
@@ -122,7 +126,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshUserData = async () => {
     if (user) {
       await fetchUserData(user.id);
-      // Also refresh the session to get updated email
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) setUser(session.user);
     }
