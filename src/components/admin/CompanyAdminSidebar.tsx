@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Package, ShoppingCart, LayoutDashboard, Settings, LogOut, ExternalLink, Palette, CreditCard } from "lucide-react";
+import { Package, ShoppingCart, LayoutDashboard, Settings, LogOut, ExternalLink, Palette, CreditCard, Bell, MessageCircle } from "lucide-react";
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import {
@@ -15,6 +15,8 @@ const menuItems = [
   { id: "orders", title: "الطلبات", icon: ShoppingCart },
   { id: "appearance", title: "تخصيص الواجهة", icon: Palette },
   { id: "subscription", title: "الاشتراكات", icon: CreditCard },
+  { id: "notifications", title: "الإشعارات", icon: Bell },
+  { id: "support", title: "الدعم الفني", icon: MessageCircle },
   { id: "settings", title: "الإعدادات", icon: Settings },
 ];
 
@@ -34,9 +36,7 @@ const CompanyAdminSidebar = ({ activeTab, setActiveTab, onSignOut, displayName, 
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const handleViewStore = () => {
-    if (storeType && orgId) {
-      window.open(`/store/${storeType}/${orgId}`, "_blank");
-    }
+    if (storeType && orgId) window.open(`/store/${storeType}/${orgId}`, "_blank");
   };
 
   return (
@@ -44,10 +44,6 @@ const CompanyAdminSidebar = ({ activeTab, setActiveTab, onSignOut, displayName, 
       <Sidebar collapsible="icon">
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center gap-2 px-3 py-4">
-              <Package className="w-5 h-5 text-primary" />
-              {!collapsed && <span className="font-bold text-base truncate">{orgName || "متجري"}</span>}
-            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {menuItems.map((item) => (
@@ -62,10 +58,7 @@ const CompanyAdminSidebar = ({ activeTab, setActiveTab, onSignOut, displayName, 
                   </SidebarMenuItem>
                 ))}
                 <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={handleViewStore}
-                    className="text-primary hover:bg-primary/10"
-                  >
+                  <SidebarMenuButton onClick={handleViewStore} className="text-primary hover:bg-primary/10">
                     <ExternalLink className="w-4 h-4" />
                     {!collapsed && <span>مشاهدة الموقع</span>}
                   </SidebarMenuButton>
