@@ -49,7 +49,7 @@ const AdminChatInbox = () => {
   });
 
   // Get messages for selected conversation
-  const { data: messages: chatMessages = [] } = useQuery({
+  const { data: chatMessages = [] } = useQuery({
     queryKey: ["admin-chat", selectedOrg],
     queryFn: async () => {
       if (!selectedOrg) return [];
