@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { BarChart3, Building2, LayoutDashboard, Settings, LogOut, Bell, CreditCard, BellRing } from "lucide-react";
+import { BarChart3, Building2, LayoutDashboard, Settings, LogOut, Bell, CreditCard, BellRing, Gift, MessageCircle } from "lucide-react";
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import {
@@ -14,8 +14,10 @@ const menuItems = [
   { id: "pending", title: "طلبات التسجيل", icon: Bell },
   { id: "organizations", title: "إدارة الشركات", icon: Building2 },
   { id: "subscriptions", title: "الاشتراكات", icon: CreditCard },
+  { id: "offers", title: "العروض", icon: Gift },
   { id: "account", title: "إعدادات الحساب", icon: Settings },
   { id: "notifications", title: "الإشعارات", icon: BellRing },
+  { id: "messages", title: "الرسائل", icon: MessageCircle },
 ];
 
 interface Props {
@@ -35,10 +37,6 @@ const SuperAdminSidebar = ({ activeTab, setActiveTab, onSignOut, displayName }: 
       <Sidebar collapsible="icon">
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center gap-2 px-3 py-4">
-              <BarChart3 className="w-5 h-5 text-primary" />
-              {!collapsed && <span className="font-bold text-base">StoreHub</span>}
-            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {menuItems.map((item) => (

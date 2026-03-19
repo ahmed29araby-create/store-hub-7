@@ -91,6 +91,42 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          is_read: boolean
+          message: string | null
+          sender_id: string
+          sender_type: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_read?: boolean
+          message?: string | null
+          sender_id: string
+          sender_type?: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_read?: boolean
+          message?: string | null
+          sender_id?: string
+          sender_type?: string
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -204,6 +240,81 @@ export type Database = {
         }
         Relationships: []
       }
+      offer_sends: {
+        Row: {
+          created_at: string
+          id: string
+          offer_id: string
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          offer_id: string
+          organization_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          offer_id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_sends_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_sends_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offers: {
+        Row: {
+          bg_color: string
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          subtitle: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bg_color?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          subtitle?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          bg_color?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
@@ -257,7 +368,11 @@ export type Database = {
           is_active: boolean
           name: string
           store_type: Database["public"]["Enums"]["store_type"]
+          subscription_end_date: string | null
+          subscription_package_id: string | null
           subscription_price: number | null
+          subscription_start_date: string | null
+          subscription_status: string
           trial_end_date: string | null
           trial_months: number | null
           updated_at: string
@@ -270,7 +385,11 @@ export type Database = {
           is_active?: boolean
           name: string
           store_type: Database["public"]["Enums"]["store_type"]
+          subscription_end_date?: string | null
+          subscription_package_id?: string | null
           subscription_price?: number | null
+          subscription_start_date?: string | null
+          subscription_status?: string
           trial_end_date?: string | null
           trial_months?: number | null
           updated_at?: string
@@ -283,12 +402,24 @@ export type Database = {
           is_active?: boolean
           name?: string
           store_type?: Database["public"]["Enums"]["store_type"]
+          subscription_end_date?: string | null
+          subscription_package_id?: string | null
           subscription_price?: number | null
+          subscription_start_date?: string | null
+          subscription_status?: string
           trial_end_date?: string | null
           trial_months?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "organizations_subscription_package_id_fkey"
+            columns: ["subscription_package_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       platform_settings: {
         Row: {
@@ -456,6 +587,7 @@ export type Database = {
           id: string
           is_popular: boolean
           is_visible: boolean
+          max_products: number
           name: string
           name_en: string | null
           price: number
@@ -468,6 +600,7 @@ export type Database = {
           id?: string
           is_popular?: boolean
           is_visible?: boolean
+          max_products?: number
           name: string
           name_en?: string | null
           price?: number
@@ -480,6 +613,7 @@ export type Database = {
           id?: string
           is_popular?: boolean
           is_visible?: boolean
+          max_products?: number
           name?: string
           name_en?: string | null
           price?: number
@@ -496,6 +630,7 @@ export type Database = {
           months: number
           organization_id: string
           package_id: string
+          payment_method: string
           phone_number: string
           receipt_url: string | null
           reviewed_at: string | null
@@ -509,6 +644,7 @@ export type Database = {
           months?: number
           organization_id: string
           package_id: string
+          payment_method?: string
           phone_number?: string
           receipt_url?: string | null
           reviewed_at?: string | null
@@ -522,6 +658,7 @@ export type Database = {
           months?: number
           organization_id?: string
           package_id?: string
+          payment_method?: string
           phone_number?: string
           receipt_url?: string | null
           reviewed_at?: string | null
