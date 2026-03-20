@@ -11,15 +11,13 @@ import { Building2, CheckCircle, XCircle, Clock, Shirt, Watch, UtensilsCrossed }
 import { toast } from "sonner";
 
 const storeTypeLabels: Record<string, string> = {
-  clothing: "ملابس",
-  accessories: "إكسسوارات",
-  restaurant: "مطاعم",
+  clothing: "ملابس", accessories: "إكسسوارات", restaurant: "مطاعم", pharmacy: "صيدلية",
+  electronics: "إلكترونيات", sports: "رياضة", gifts: "هدايا", home_decor: "ديكور",
+  supermarket: "سوبرماركت", kids_toys: "أطفال", real_estate: "عقارات",
 };
 
 const storeTypeIcons: Record<string, typeof Shirt> = {
-  clothing: Shirt,
-  accessories: Watch,
-  restaurant: UtensilsCrossed,
+  clothing: Shirt, accessories: Watch, restaurant: UtensilsCrossed,
 };
 
 const PendingRegistrations = () => {
@@ -30,11 +28,7 @@ const PendingRegistrations = () => {
   const { data: pendingOrgs = [], isLoading } = useQuery({
     queryKey: ["pending-registrations"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("organizations")
-        .select("*")
-        .eq("approval_status", "pending")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("organizations").select("*").eq("approval_status", "pending").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -47,9 +41,26 @@ const PendingRegistrations = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
+      // Send notification to company admin
+      const { data: profiles } = await supabase.from("profiles").select("user_id").eq("organization_id", orgId);
+      if (profiles) {
+        const trialText = trialMonths > 0
+          ? `تم تفعيل حسابك بنجاح مع اشتراك مجاني لمدة ${trialMonths} ${trialMonths === 1 ? "شهر" : trialMonths === 2 ? "شهرين" : "أشهر"}.`
+          : "تم تفعيل حسابك بنجاح! يرجى اختيار باقة اشتراك للمتابعة.";
+        for (const p of profiles) {
+          await supabase.from("notifications").insert({
+            user_id: p.user_id,
+            title: "تم تفعيل حسابك",
+            message: trialText,
+            type: "account",
+            related_id: orgId,
+          });
+        }
+      }
     },
     onSuccess: () => {
-      toast.success("تمت الموافقة على الطلب بنجاح");
+      toast.success("تمت الموافقة على الطلب وتم إرسال إشعار للشركة");
       queryClient.invalidateQueries({ queryKey: ["pending-registrations"] });
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
       setApproveDialog(null);
@@ -68,21 +79,17 @@ const PendingRegistrations = () => {
     onSuccess: () => {
       toast.success("تم رفض الطلب");
       queryClient.invalidateQueries({ queryKey: ["pending-registrations"] });
-      queryClient.invalidateQueries({ queryKey: ["organizations"] });
     },
     onError: (err: Error) => toast.error(err.message),
   });
 
-  if (isLoading) {
-    return <div className="text-center py-12 text-muted-foreground">جاري التحميل...</div>;
-  }
+  if (isLoading) return <div className="text-center py-12 text-muted-foreground">جاري التحميل...</div>;
 
   if (pendingOrgs.length === 0) {
     return (
       <div className="text-center py-16">
         <CheckCircle className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
         <p className="text-muted-foreground text-lg">لا توجد طلبات معلقة</p>
-        <p className="text-muted-foreground text-sm mt-1">ستظهر هنا طلبات التسجيل الجديدة</p>
       </div>
     );
   }
@@ -108,35 +115,20 @@ const PendingRegistrations = () => {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-foreground">{org.name}</h3>
-                        <Badge variant="outline" className="border-orange-300 text-orange-600">
-                          <Clock className="w-3 h-3 ml-1" />
-                          قيد المراجعة
-                        </Badge>
                         <Badge variant="secondary">{storeTypeLabels[org.store_type] || org.store_type}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">{org.email}</p>
                       <p className="text-xs text-muted-foreground">
-                        تاريخ التسجيل: {new Date(org.created_at).toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        {new Date(org.created_at).toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </p>
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => setApproveDialog({ id: org.id, name: org.name })}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle className="w-4 h-4 ml-1" />
-                      موافقة
+                    <Button size="sm" onClick={() => setApproveDialog({ id: org.id, name: org.name })} className="bg-green-600 hover:bg-green-700">
+                      <CheckCircle className="w-4 h-4 ml-1" />موافقة
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => rejectMutation.mutate(org.id)}
-                      disabled={rejectMutation.isPending}
-                    >
-                      <XCircle className="w-4 h-4 ml-1" />
-                      رفض
+                    <Button variant="destructive" size="sm" onClick={() => rejectMutation.mutate(org.id)} disabled={rejectMutation.isPending}>
+                      <XCircle className="w-4 h-4 ml-1" />رفض
                     </Button>
                   </div>
                 </div>
@@ -146,7 +138,6 @@ const PendingRegistrations = () => {
         })}
       </div>
 
-      {/* Approve Dialog with Trial Options */}
       <Dialog open={!!approveDialog} onOpenChange={(open) => { if (!open) setApproveDialog(null); }}>
         <DialogContent dir="rtl">
           <DialogHeader>
@@ -157,31 +148,25 @@ const PendingRegistrations = () => {
             <div className="space-y-2">
               <Label>الفترة التجريبية</Label>
               <Select value={trialMonths} onValueChange={setTrialMonths}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">بدون فترة تجريبية (يدفع مباشرة)</SelectItem>
                   <SelectItem value="1">شهر مجاني</SelectItem>
                   <SelectItem value="2">شهرين مجاني</SelectItem>
                   <SelectItem value="3">3 أشهر مجاني</SelectItem>
+                  <SelectItem value="4">4 أشهر مجاني</SelectItem>
+                  <SelectItem value="5">5 أشهر مجاني</SelectItem>
+                  <SelectItem value="6">6 أشهر مجاني</SelectItem>
+                  <SelectItem value="12">سنة مجانية</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {trialMonths !== "0" && (
               <p className="text-sm text-muted-foreground">
-                سيتم تفعيل المتجر لمدة {trialMonths} {Number(trialMonths) === 1 ? "شهر" : Number(trialMonths) === 2 ? "شهرين" : "أشهر"} مجاناً. بعدها سيتم إيقاف المتجر تلقائياً.
+                سيتم تفعيل المتجر لمدة {trialMonths} {Number(trialMonths) === 1 ? "شهر" : Number(trialMonths) === 2 ? "شهرين" : Number(trialMonths) === 12 ? "سنة" : "أشهر"} مجاناً.
               </p>
             )}
-            <Button
-              className="w-full bg-green-600 hover:bg-green-700"
-              onClick={() => {
-                if (approveDialog) {
-                  approveMutation.mutate({ orgId: approveDialog.id, trialMonths: Number(trialMonths) });
-                }
-              }}
-              disabled={approveMutation.isPending}
-            >
+            <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => { if (approveDialog) approveMutation.mutate({ orgId: approveDialog.id, trialMonths: Number(trialMonths) }); }} disabled={approveMutation.isPending}>
               {approveMutation.isPending ? "جاري الموافقة..." : "تأكيد الموافقة"}
             </Button>
           </div>

@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Package, ShoppingCart, LayoutDashboard, Settings, LogOut, ExternalLink, Palette, CreditCard, Bell, MessageCircle } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -32,8 +35,20 @@ interface Props {
 
 const CompanyAdminSidebar = ({ activeTab, setActiveTab, onSignOut, displayName, orgName, storeType, orgId }: Props) => {
   const { state } = useSidebar();
+  const { user } = useAuth();
   const collapsed = state === "collapsed";
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
+  const { data: unreadNotifications = 0 } = useQuery({
+    queryKey: ["company-unread-notifications", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const { count } = await supabase.from("notifications").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("is_read", false);
+      return count || 0;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 10000,
+  });
 
   const handleViewStore = () => {
     if (storeType && orgId) window.open(`/store/${storeType}/${orgId}`, "_blank");
@@ -52,7 +67,12 @@ const CompanyAdminSidebar = ({ activeTab, setActiveTab, onSignOut, displayName, 
                       onClick={() => setActiveTab(item.id)}
                       className={activeTab === item.id ? "bg-accent text-accent-foreground font-medium" : ""}
                     >
-                      <item.icon className="w-4 h-4" />
+                      <div className="relative">
+                        <item.icon className="w-4 h-4" />
+                        {item.id === "notifications" && unreadNotifications > 0 && (
+                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-green-500" />
+                        )}
+                      </div>
                       {!collapsed && <span>{item.title}</span>}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -89,9 +109,7 @@ const CompanyAdminSidebar = ({ activeTab, setActiveTab, onSignOut, displayName, 
           </AlertDialogHeader>
           <AlertDialogFooter className="flex gap-2">
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={onSignOut} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              نعم، تسجيل الخروج
-            </AlertDialogAction>
+            <AlertDialogAction onClick={onSignOut} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">نعم، تسجيل الخروج</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
