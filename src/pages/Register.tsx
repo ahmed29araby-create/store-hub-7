@@ -6,23 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Eye, EyeOff, Store, ArrowRight, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-const storeTypeLabels: Record<string, string> = {
-  clothing: "متجر ملابس",
-  accessories: "متجر إكسسوارات",
-  restaurant: "مطعم",
-  pharmacy: "صيدلية",
-  electronics: "إلكترونيات وتقنية",
-  sports: "رياضة ولياقة",
-  gifts: "هدايا ومناسبات",
-  home_decor: "المنزل والديكور",
-  supermarket: "سوبرماركت",
-  kids_toys: "أطفال وألعاب",
-  real_estate: "عقارات",
-};
 
 const Register = () => {
   const navigate = useNavigate();
@@ -37,7 +23,6 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const handleRegister = async () => {
     if (!storeName || !email || !password || !confirmPassword || !storeType) {
@@ -64,34 +49,19 @@ const Register = () => {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setSuccess(true);
+
+      // Auto-login after successful registration
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) throw signInError;
+
+      toast.success("تم إنشاء حسابك بنجاح!");
+      navigate("/dashboard");
     } catch (err: any) {
       toast.error(err.message || "حدث خطأ أثناء التسجيل");
     } finally {
       setLoading(false);
     }
   };
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4" dir="rtl">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center max-w-md"
-        >
-          <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-foreground mb-3">تم تسجيل طلبك بنجاح!</h2>
-          <p className="text-muted-foreground mb-2">حسابك قيد المراجعة من قبل إدارة المنصة.</p>
-          <p className="text-muted-foreground mb-8">سيتم تفعيل متجرك بعد الموافقة على طلبك.</p>
-          <Button onClick={() => navigate("/")} variant="outline">
-            <ArrowRight className="w-4 h-4 ml-2" />
-            العودة للصفحة الرئيسية
-          </Button>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12" dir="rtl">
@@ -109,14 +79,10 @@ const Register = () => {
             <CardDescription>أدخل بياناتك لإنشاء متجرك الإلكتروني</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Store Name */}
             <div className="space-y-2">
               <Input
                 value={storeName}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setStoreName(val);
-                }}
+                onChange={(e) => setStoreName(e.target.value)}
                 placeholder="My Store"
                 dir="ltr"
               />
@@ -125,13 +91,10 @@ const Register = () => {
               )}
             </div>
 
-            {/* Store Type */}
             <div className="space-y-2">
               <Label>نوع المتجر</Label>
               <Select value={storeType} onValueChange={setStoreType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر نوع المتجر" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="اختر نوع المتجر" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="clothing">متجر ملابس</SelectItem>
                   <SelectItem value="accessories">متجر إكسسوارات</SelectItem>
@@ -148,19 +111,11 @@ const Register = () => {
               </Select>
             </div>
 
-            {/* Email */}
             <div className="space-y-2">
               <Label>البريد الإلكتروني</Label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@example.com"
-                dir="ltr"
-              />
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" dir="ltr" />
             </div>
 
-            {/* Password */}
             <div className="space-y-2">
               <div className="relative">
                 <Input
@@ -175,22 +130,13 @@ const Register = () => {
                   dir="rtl"
                   className="pl-10"
                 />
-                <button
-                  type="button"
-                  onMouseDown={() => setShowPassword(true)}
-                  onMouseUp={() => setShowPassword(false)}
-                  onMouseLeave={() => setShowPassword(false)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                >
+                <button type="button" onMouseDown={() => setShowPassword(true)} onMouseUp={() => setShowPassword(false)} onMouseLeave={() => setShowPassword(false)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {password.length > 0 && password.length < 12 && (
-                <p className="text-xs text-destructive">كلمة المرور يجب أن تكون 12 حرف على الأقل</p>
-              )}
+              {password.length > 0 && password.length < 12 && <p className="text-xs text-destructive">كلمة المرور يجب أن تكون 12 حرف على الأقل</p>}
             </div>
 
-            {/* Confirm Password */}
             <div className="space-y-2">
               <div className="relative">
                 <Input
@@ -205,34 +151,19 @@ const Register = () => {
                   dir="rtl"
                   className="pl-10"
                 />
-                <button
-                  type="button"
-                  onMouseDown={() => setShowConfirmPassword(true)}
-                  onMouseUp={() => setShowConfirmPassword(false)}
-                  onMouseLeave={() => setShowConfirmPassword(false)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                >
+                <button type="button" onMouseDown={() => setShowConfirmPassword(true)} onMouseUp={() => setShowConfirmPassword(false)} onMouseLeave={() => setShowConfirmPassword(false)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {confirmPassword && password !== confirmPassword && (
-                <p className="text-xs text-destructive">كلمة المرور غير متطابقة</p>
-              )}
+              {confirmPassword && password !== confirmPassword && <p className="text-xs text-destructive">كلمة المرور غير متطابقة</p>}
             </div>
 
-            <Button
-              className="w-full"
-              onClick={handleRegister}
-              disabled={!storeName || !email || password.length < 12 || password !== confirmPassword || !storeType || loading}
-            >
+            <Button className="w-full" onClick={handleRegister} disabled={!storeName || !email || password.length < 12 || password !== confirmPassword || !storeType || loading}>
               {loading ? "جاري التسجيل..." : "إنشاء المتجر"}
             </Button>
 
             <div className="text-center">
-              <button
-                onClick={() => navigate("/login")}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
+              <button onClick={() => navigate("/login")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 لديك حساب بالفعل؟ <span className="text-primary font-medium">تسجيل الدخول</span>
               </button>
             </div>
