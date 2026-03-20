@@ -29,20 +29,12 @@ Deno.serve(async (req) => {
     if (claimsError || !claimsData?.claims?.sub) throw new Error("Unauthorized");
     const userId = claimsData.claims.sub as string;
 
-    // Verify super admin
     const { data: roleCheck } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "super_admin")
-      .single();
+      .from("user_roles").select("role").eq("user_id", userId).eq("role", "super_admin").single();
     if (!roleCheck) throw new Error("Not a super admin");
 
     const { organization_id, action, trial_months } = await req.json();
-
-    if (!organization_id || !action) {
-      throw new Error("Missing required fields");
-    }
+    if (!organization_id || !action) throw new Error("Missing required fields");
 
     if (action === "approve") {
       const updateData: Record<string, unknown> = {
@@ -55,19 +47,18 @@ Deno.serve(async (req) => {
         const trialEnd = new Date();
         trialEnd.setMonth(trialEnd.getMonth() + trial_months);
         updateData.trial_end_date = trialEnd.toISOString();
+        // Set subscription status as active for trial
+        updateData.subscription_status = "active";
+        updateData.subscription_start_date = new Date().toISOString();
+        updateData.subscription_end_date = trialEnd.toISOString();
+        updateData.subscription_price = 0;
       }
 
-      const { error } = await supabaseAdmin
-        .from("organizations")
-        .update(updateData)
-        .eq("id", organization_id);
+      const { error } = await supabaseAdmin.from("organizations").update(updateData).eq("id", organization_id);
       if (error) throw error;
 
     } else if (action === "reject") {
-      const { error } = await supabaseAdmin
-        .from("organizations")
-        .update({ approval_status: "rejected", is_active: false })
-        .eq("id", organization_id);
+      const { error } = await supabaseAdmin.from("organizations").update({ approval_status: "rejected", is_active: false }).eq("id", organization_id);
       if (error) throw error;
     } else {
       throw new Error("Invalid action");
